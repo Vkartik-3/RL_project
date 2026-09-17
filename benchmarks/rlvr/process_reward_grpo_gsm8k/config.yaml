@@ -1,0 +1,15 @@
+manifest: configs/post_training/grpo_process_reward_tiny_cpu.yaml with backend.type=huggingface
+  (Qwen/Qwen2.5-7B-Instruct), max_new_tokens 256, 30 steps
+algorithm: 'grpo (objective: reinforce)'
+backend: huggingface
+base_model: Qwen/Qwen2.5-7B-Instruct
+reward:
+  type: process
+  gamma: 0.9
+  step_weight: 0.5
+group_size: 4
+prompts_per_step: 2
+problems: 20
+optimizer: adamw lr=5e-6 (torch default wd=0.01)
+max_new_tokens: 256
+temperature: 0.9

@@ -1,0 +1,1 @@
+Hardware: Apple M-series laptop CPU (exact chip and memory not recorded). Precision float32.

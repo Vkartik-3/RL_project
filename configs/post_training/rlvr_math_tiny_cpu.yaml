@@ -1,0 +1,25 @@
+# RL with verifiable rewards: math verifier (+ optional chain-of-thought format verifier) driving DAPO.
+name: rlvr-math-tiny-cpu
+algorithm: rlvr
+model_preset: tiny
+model: {block_size: 96, dropout: 0.0}
+data: {kind: verifiable, path: data/samples/verifiable/arithmetic_tasks.jsonl, tokenizer: char}
+trainer:
+  max_steps: 10
+  batch_size: 4
+  eval_every: 5
+  log_every: 2
+  device: cpu
+  optimizer: {learning_rate: 5.0e-5, weight_decay: 0.0, beta2: 0.999}
+  schedule: {name: constant, warmup_steps: 0}
+  checkpoint: {directory: checkpoints, save_every: 0}
+algorithm_params:
+  task_type: math
+  optimizer: dapo
+  require_format: true
+  format_spec: cot
+  correctness_weight: 0.7
+  format_weight: 0.3
+  dapo: {group_size: 4, prompts_per_step: 2, clip_eps_low: 0.2, clip_eps_high: 0.28, kl_coef: 0.04}
+  rollout: {max_new_tokens: 24, temperature: 0.9}
+output_dir: runs/rlvr-math-tiny-cpu

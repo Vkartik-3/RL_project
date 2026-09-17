@@ -1,0 +1,43 @@
+{
+  "evidence": "documented_without_raw_log",
+  "entries": [
+    {
+      "method": "GRPO (G=4) on synthesis records",
+      "documented_value": 0.823,
+      "documented_peak": 0.878,
+      "documented_metric": "final reward (table column 'Final Reward')",
+      "status": "NEEDS_EVIDENCE_RECOVERY",
+      "search": "Appears only in the final comparison commit (README tables and a hard-coded fallback dictionary in the comparison script). `grpo_results.json`, which the training script writes, was never committed; no log, chart, checkpoint or W&B export exists.",
+      "interpretation_if_recovered": "The committed GRPO script evaluates the last 20% of the literature records with the rule reward, which yields 0.8080 for every policy; 0.823 therefore cannot be that script's test output. If it is a training reward it is a record statistic like the PPO training rewards."
+    },
+    {
+      "method": "RLAIF self-judge \u2192 DPO",
+      "documented_value": 0.814,
+      "documented_peak": 0.867,
+      "documented_metric": "final reward; also '100% > 0.75' and '+62.8%'",
+      "status": "NEEDS_EVIDENCE_RECOVERY",
+      "search": "Only in the same comparison commit. The RLAIF trainer reports DPO loss per round (best_loss), trains on GSM8K problems by default, and writes no reward; the table labels the data 'ORD (real)'. +62.8% equals (0.814 \u2212 0.5)/0.5, the record evaluator's formula.",
+      "interpretation_if_recovered": "Requires the evaluator, split and data that produced it; the retained RLAIF trainer output would be a loss."
+    },
+    {
+      "method": "STaR (3 rounds) on GSM8K",
+      "documented_value": 0.791,
+      "documented_peak": 0.843,
+      "documented_metric": "final reward",
+      "status": "NEEDS_EVIDENCE_RECOVERY",
+      "search": "Only in the same comparison commit. The STaR trainer reports accuracy (baseline_acc, best_acc, per-round accuracy), not reward.",
+      "interpretation_if_recovered": "Would be an accuracy on the STaR evaluation subset, not a reward."
+    },
+    {
+      "method": "SFT warm-up",
+      "documented_value": 0.412,
+      "documented_metric": "final reward",
+      "status": "NEEDS_EVIDENCE_RECOVERY",
+      "search": "Only in the comparison commit; the retained SFT results file contains losses only."
+    }
+  ],
+  "published": false,
+  "notes": [
+    "None of these values is presented as a supported result. They are not classified as invalid: the evidence that produced them is missing. Rerunning the listed methods with Forgeline manifests on GPU produces verifiable replacements."
+  ]
+}

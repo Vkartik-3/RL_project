@@ -1,0 +1,40 @@
+{
+  "evidence": "raw_log",
+  "rounds": [
+    {
+      "round": 0,
+      "accuracy": 0.125,
+      "tool_use": 0.0,
+      "avg_reward": 0.1375,
+      "dataset_size": 32
+    },
+    {
+      "round": 1,
+      "dataset_size": 44,
+      "accuracy": 0.0,
+      "tool_use": 0.0,
+      "avg_reward": 0.0
+    },
+    {
+      "round": 2,
+      "dataset_size": 32,
+      "accuracy": 0.0,
+      "tool_use": 0.0,
+      "avg_reward": 0.0
+    },
+    {
+      "round": 3,
+      "dataset_size": 32,
+      "accuracy": 0.0,
+      "tool_use": 0.0,
+      "avg_reward": 0.0
+    }
+  ],
+  "revalidation_required": false,
+  "notes": [
+    "Round 0 is the untrained baseline (4/32 correct). With reward threshold 0.5 the rejection step retained almost no trajectories and accuracy fell to 0 in later rounds; a lower threshold or an easier curriculum is required for this model size."
+  ],
+  "ledger_status": {
+    "rounds": "CARRY_FORWARD_WITH_INTERPRETATION_NOTE"
+  }
+}

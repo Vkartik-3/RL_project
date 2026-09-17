@@ -1,0 +1,19 @@
+# Agent GRPO with the Python executor on GSM8K (GPU). Recorded under benchmarks/rlvr/agent_grpo_gsm8k_tools.
+#   forgeline data gsm8k --output data/gsm8k_train_tools.jsonl
+name: agent-grpo-gsm8k-qwen7b-lora
+algorithm: grpo
+backend: {type: huggingface, model_name: Qwen/Qwen2.5-7B-Instruct, lora_r: 8, lora_alpha: 16, torch_dtype: float16}
+data: {kind: verifiable, path: data/gsm8k_train_tools.jsonl}
+reward: {type: tagged, format_bonus: true}
+trainer:
+  max_steps: 200
+  batch_size: 2
+  eval_every: 0
+  log_every: 10
+  device: cuda
+  optimizer: {learning_rate: 5.0e-6, weight_decay: 0.01, beta2: 0.999, decay_only_matrices: false}
+  schedule: {name: constant, warmup_steps: 0}
+  precision: {dtype: float16}
+  checkpoint: {directory: checkpoints, save_every: 50}
+algorithm_params: {group_size: 4, prompts_per_step: 2, clip_ratio: 0.2, kl_coef: 0.04, agent: true}
+output_dir: runs/agent-grpo-gsm8k-qwen7b-lora

@@ -1,0 +1,6 @@
+algorithm: hill_climb
+backend: huggingface
+base_model: Qwen/Qwen2.5-7B-Instruct
+reward_threshold: 0.5
+rollouts_per_problem: 4
+top_k_per_problem: 2

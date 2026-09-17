@@ -1,0 +1,24 @@
+# Configuration of the measured single-GPU (A40, 46 GB) FineWeb-Edu run — see benchmarks/training/fineweb_edu_large_a40.
+# bf16 autocast, torch.compile, batch 8 × 2048 tokens, cosine schedule with 200 warmup steps, 30k steps.
+name: pretrain-large-gpu
+algorithm: pretrain
+model_preset: large
+data:
+  kind: pretraining
+  path: data/prepared/fineweb_edu
+  tokenizer: auto
+trainer:
+  max_steps: 30000
+  batch_size: 8
+  eval_every: 500
+  eval_batches: 20
+  log_every: 100
+  device: cuda
+  compile_model: true
+  optimizer: {learning_rate: 1.5e-4, weight_decay: 0.1, beta1: 0.9, beta2: 0.95, grad_clip: 1.0}
+  schedule: {name: cosine, warmup_steps: 200, decay_steps: 30000, min_lr: 1.5e-5}
+  precision: {dtype: bfloat16}
+  checkpoint: {directory: checkpoints, save_every: 500, keep_last: 2}
+distributed:
+  strategy: single
+output_dir: runs/pretrain-large-gpu

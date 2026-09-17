@@ -1,0 +1,2 @@
+# 8 GPUs: 2-way tensor parallel × 4-way pipeline parallel (data parallel degree = 1).
+distributed: {strategy: pipeline_parallel, backend: nccl, tensor_parallel_size: 2, pipeline_parallel_size: 4, pipeline_micro_batches: 4}

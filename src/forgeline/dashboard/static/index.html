@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forgeline Dashboard</title>
+<style>
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --ink: #1b1f24; --muted: #5d6673; --line: #dfe3e8;
+  --accent: #2f6fdf; --accent-soft: #e6eefc; --ok: #1f8a4c; --warn: #b7791f; --bad: #c0392b;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #111418; --panel: #1a1f25; --ink: #e6e9ed; --muted: #9aa4b1; --line: #2b323b;
+          --accent: #6ea0ff; --accent-soft: #1d2a40; --ok: #4cc58a; --warn: #e0a84a; --bad: #ef6b5b; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { display: flex; align-items: center; gap: 24px; padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 2; }
+header h1 { font-size: 16px; margin: 0; letter-spacing: .02em; }
+nav button { background: none; border: 0; color: var(--muted); padding: 6px 10px; border-radius: 6px; cursor: pointer; font: inherit; }
+nav button.active { color: var(--accent); background: var(--accent-soft); }
+#refresh { margin-left: auto; color: var(--muted); font-size: 12px; }
+main { padding: 16px 20px; max-width: 1400px; margin: 0 auto; }
+.grid { display: grid; grid-template-columns: 320px 1fr; gap: 16px; }
+@media (max-width: 860px) { .grid { grid-template-columns: 1fr; } header { flex-wrap: wrap; gap: 8px; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; min-width: 0; }
+.panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; }
+.scroll { overflow-x: auto; }
+.list-item { padding: 8px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
+.list-item:hover { background: var(--accent-soft); }
+.list-item.selected { border-color: var(--accent); background: var(--accent-soft); }
+.muted { color: var(--muted); } .mono { font-family: var(--mono); font-size: 12px; }
+.badge { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px; border: 1px solid var(--line); }
+.s-finished, .s-champion, .s-raw_log, .s-valid { color: var(--ok); border-color: var(--ok); }
+.s-running, .s-challenger, .s-shadow, .s-documented_measurement { color: var(--accent); border-color: var(--accent); }
+.s-failed, .s-retired, .s-invalid, .s-documented_without_raw_log { color: var(--bad); border-color: var(--bad); }
+.s-experimental, .s-unknown { color: var(--muted); }
+.charts { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.chart { border: 1px solid var(--line); border-radius: 6px; padding: 8px; }
+.chart .title { font-size: 12px; display: flex; justify-content: space-between; }
+svg { display: block; width: 100%; height: 140px; }
+.empty { color: var(--muted); padding: 16px 0; }
+input, select { font: inherit; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
+button.primary { font: inherit; background: var(--accent); color: #fff; border: 0; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.bar { height: 8px; background: var(--accent); border-radius: 4px; }
+pre { white-space: pre-wrap; font-family: var(--mono); font-size: 12px; margin: 0; }
+.heat { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+canvas { width: 100%; image-rendering: pixelated; border: 1px solid var(--line); border-radius: 4px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Forgeline</h1>
+  <nav id="tabs">
+    <button data-tab="runs" class="active">Runs</button>
+    <button data-tab="registry">Registry</button>
+    <button data-tab="benchmarks">Benchmarks</button>
+    <button data-tab="inspect">Inspect</button>
+  </nav>
+  <span id="refresh"></span>
+</header>
+<main id="view"></main>
+<script>
+"use strict";
+const state = { tab: "runs", run: null, overview: null, runDetail: null, timer: null };
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const fmt = (v) => typeof v === "number" ? (Math.abs(v) >= 1000 || (v !== 0 && Math.abs(v) < 1e-3) ? v.toExponential(3) : +v.toFixed(4)) : esc(v);
+const badge = (s) => `<span class="badge s-${esc(s)}">${esc(s)}</span>`;
+const ago = (t) => { if (!t) return ""; const s = Date.now() / 1000 - t; return s < 90 ? `${Math.round(s)}s ago` : s < 5400 ? `${Math.round(s / 60)}m ago` : s < 172800 ? `${Math.round(s / 3600)}h ago` : new Date(t * 1000).toLocaleDateString(); };
+async function api(path) { const r = await fetch(path); const body = await r.json(); if (!r.ok) throw new Error(body.error || r.statusText); return body; }
+
+function lineChart(points) {
+  if (!points.length) return "<svg></svg>";
+  const W = 300, H = 140, P = 6;
+  const xs = points.map((p) => p[0]), ys = points.map((p) => p[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const sx = (x) => P + (x1 === x0 ? 0.5 : (x - x0) / (x1 - x0)) * (W - 2 * P);
+  const sy = (y) => H - P - (y1 === y0 ? 0.5 : (y - y0) / (y1 - y0)) * (H - 2 * P);
+  const d = points.map((p, i) => `${i ? "L" : "M"}${sx(p[0]).toFixed(1)},${sy(p[1]).toFixed(1)}`).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${d}" fill="none" stroke="var(--accent)" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>
+    <div class="muted mono" style="display:flex;justify-content:space-between"><span>step ${fmt(x0)}–${fmt(x1)}</span><span>${fmt(y0)} … ${fmt(y1)}</span></div>`;
+}
+
+async function renderRuns() {
+  const ov = state.overview;
+  const runs = ov.runs;
+  if (!runs.length) return `<div class="panel empty">No runs found under ${esc(ov.sources.runs.join(", "))}. Runs appear here once <span class="mono">forgeline train</span> writes metrics.jsonl.</div>`;
+  if (!state.run || !runs.find((r) => r.id === state.run)) state.run = runs[0].id;
+  const list = runs.map((r) => `<div class="list-item ${r.id === state.run ? "selected" : ""}" data-run="${esc(r.id)}">
+      <div class="row"><b>${esc(r.name)}</b>${badge(r.status)}${r.live ? '<span class="badge s-running">live</span>' : ""}</div>
+      <div class="muted">${esc(r.algorithm)} · step ${esc(r.last_step ?? "–")} · ${esc(r.strategy || "single")}${r.orchestration === "ray" ? " · ray" : ""} · ${ago(r.updated_at)}</div></div>`).join("");
+  const d = state.runDetail = await api(`/api/runs/${state.run}`);
+  const keys = Object.keys(d.series);
+  const charts = keys.length ? keys.map((k) => { const s = d.series[k]; return `<div class="chart"><div class="title"><span class="mono">${esc(k)}</span><span>${fmt(s[s.length - 1][1])}</span></div>${lineChart(s)}</div>`; }).join("") : '<div class="empty">No metrics logged yet.</div>';
+  const ckpts = d.checkpoints.length ? `<div class="scroll"><table><tr><th>checkpoint</th><th>step</th><th>algorithm</th><th>size</th><th>state</th><th></th></tr>${d.checkpoints.map((c) => `<tr>
+      <td class="mono">${esc(c.name)}${c.is_latest ? " ← LATEST" : ""}</td><td>${esc(c.step)}</td><td>${esc(c.algorithm)}</td>
+      <td>${(c.size_bytes / 1048576).toFixed(1)} MB</td><td>${badge(c.valid ? "valid" : "invalid")} <span class="muted">${esc(c.error)}</span></td>
+      <td><button class="primary" data-inspect="${esc(c.path)}">Inspect</button></td></tr>`).join("")}</table></div>` : '<div class="empty">No checkpoints.</div>';
+  const evals = d.evaluations.length ? d.evaluations.map((e) => `<div class="mono muted">${esc(e.path)}</div><table>${e.results.map((r) => `<tr><td>${esc(r.suite)}</td><td>${Object.entries(r.metrics).map(([k, v]) => `${esc(k)}=${fmt(v)}`).join(" · ")}</td><td>n=${esc(r.n_samples)}${r.details && r.details.offline_samples ? " (offline samples)" : ""}</td></tr>`).join("")}</table>`).join("") : '<div class="empty">No evaluation result files in this run directory.</div>';
+  const events = d.events.slice(-60).reverse().map((e) => { const { event, ts, step, ...rest } = e; return `<tr><td class="mono">${esc(event)}</td><td>${esc(step)}</td><td class="muted">${ago(ts)}</td><td class="mono">${esc(JSON.stringify(rest)).slice(0, 240)}</td></tr>`; }).join("");
+  const m = d.manifest || {};
+  return `<div class="grid"><div><div class="panel"><h2>Runs</h2>${list}</div></div><div>
+    <div class="panel"><h2>${esc(m.name || "run")}</h2><div class="muted mono">${esc(d.path)}</div>
+      <div class="row" style="margin-top:6px">${badge(d.status)} <span>${esc(m.algorithm || "")}</span><span class="muted">${esc(m.model_preset || "")}</span>
+      <span class="muted">strategy ${esc((m.distributed || {}).strategy || "single")}</span>${(m.orchestration || {}).type === "ray" ? `<span class="muted">ray: ${esc((m.orchestration || {}).rollout_workers || 0)} rollout / ${esc((m.orchestration || {}).reward_workers || 0)} reward workers</span>` : ""}</div>
+      ${d.summary ? `<pre style="margin-top:8px">${esc(JSON.stringify(Object.fromEntries(Object.entries(d.summary).filter(([k]) => !["event", "ts"].includes(k))), null, 1))}</pre>` : ""}</div>
+    <div class="panel"><h2>Metrics</h2><div class="charts">${charts}</div></div>
+    <div class="panel"><h2>Checkpoints</h2>${ckpts}</div>
+    <div class="panel"><h2>Evaluations</h2>${evals}</div>
+    <div class="panel"><h2>Events</h2><div class="scroll"><table><tr><th>event</th><th>step</th><th>when</th><th>payload</th></tr>${events}</table></div></div>
+  </div></div>`;
+}
+
+async function renderRegistry() {
+  const reg = await api("/api/registry");
+  if (!reg.exists) return `<div class="panel empty">No registry at ${esc(reg.path)}. Register a candidate with <span class="mono">forgeline registry register</span>.</div>`;
+  const models = Object.entries(reg.models);
+  if (!models.length) return '<div class="panel empty">The registry is empty.</div>';
+  return models.map(([name, cands]) => {
+    const metricKeys = [...new Set(cands.flatMap((c) => Object.keys(c.metrics)))].sort();
+    const rows = cands.map((c) => `<tr><td class="mono">${esc(c.version)}</td><td>${badge(c.state)}</td><td>${esc(c.algorithm)}</td>
+      <td>${esc(c.promotion_status)}</td>${metricKeys.map((k) => `<td>${k in c.metrics ? fmt(c.metrics[k]) : ""}</td>`).join("")}
+      <td class="muted">${(c.history || []).map((h) => `${esc(h.from)}→${esc(h.to)}${h.reason ? ` (${esc(h.reason)})` : ""}`).join("<br>")}</td></tr>`).join("");
+    return `<div class="panel"><h2>${esc(name)}</h2><div class="scroll"><table><tr><th>version</th><th>state</th><th>algorithm</th><th>gate</th>${metricKeys.map((k) => `<th class="mono">${esc(k)}</th>`).join("")}<th>transitions</th></tr>${rows}</table></div></div>`;
+  }).join("");
+}
+
+async function renderBenchmarks() {
+  const recs = await api("/api/benchmarks");
+  if (!recs.length) return '<div class="panel empty">No benchmark records found.</div>';
+  return `<div class="panel"><h2>Evidence records</h2><div class="scroll"><table><tr><th>record</th><th>evidence</th><th>flags</th><th>summary</th></tr>${recs.map((r) => `<tr>
+    <td class="mono">${esc(r.record)}</td><td>${badge(r.evidence)}</td>
+    <td>${r.revalidation_recommended ? '<span class="badge s-running">rerun recommended</span>' : ""}${r.published === false ? '<span class="badge s-failed">not published</span>' : ""}</td>
+    <td><pre>${esc(r.summary).slice(0, 1200)}</pre></td></tr>`).join("")}</table></div></div>`;
+}
+
+function heatmap(weights, tokens) {
+  const T = weights.length, cell = Math.max(2, Math.floor(240 / T));
+  const c = document.createElement("canvas"); c.width = T * cell; c.height = T * cell;
+  const g = c.getContext("2d");
+  for (let i = 0; i < T; i++) for (let j = 0; j < T; j++) {
+    const v = weights[i][j]; g.fillStyle = `rgba(47,111,223,${Math.min(1, Math.sqrt(v)).toFixed(3)})`; g.fillRect(j * cell, i * cell, cell, cell);
+  }
+  c.title = tokens ? tokens.join("") : "";
+  return c;
+}
+
+async function renderInspect(checkpoint) {
+  const ckpts = (state.runDetail ? state.runDetail.checkpoints : []);
+  const options = ckpts.map((c) => `<option value="${esc(c.path)}" ${c.path === checkpoint ? "selected" : ""}>${esc(c.name)} (step ${esc(c.step)})</option>`).join("");
+  let body = '<div class="empty">Pick a checkpoint from a run (Runs → Checkpoints → Inspect) or from the list.</div>';
+  if (checkpoint) {
+    const text = document.getElementById("inspect-text")?.value ?? "The quick brown fox";
+    try {
+      const r = await api(`/api/inspect?checkpoint=${encodeURIComponent(checkpoint)}&text=${encodeURIComponent(text)}`);
+      const maxNorm = Math.max(...r.weights.map((w) => w.norm));
+      const weights = r.weights.map((w) => `<tr><td class="mono">${esc(w.name)}</td><td class="mono">${esc(w.shape.join("×"))}</td><td>${fmt(w.mean)}</td><td>${fmt(w.std)}</td><td>${fmt(w.norm)}</td><td style="width:140px"><div class="bar" style="width:${(100 * w.norm / maxNorm).toFixed(1)}%"></div></td></tr>`).join("");
+      const acts = (r.activations || []).map((a) => [a.name, a.norm]);
+      body = `<div class="panel"><h2>Model</h2><div class="row">${Object.entries({parameters: r.parameters.toLocaleString(), step: r.step, algorithm: r.algorithm, layers: r.spec.n_layer, heads: `${r.spec.n_head}/${r.spec.n_kv_head}`, d_model: r.spec.n_embd, context: r.spec.block_size}).map(([k, v]) => `<span><span class="muted">${k}</span> <b>${esc(v)}</b></span>`).join("")}</div></div>
+        ${r.inspection_error ? `<div class="panel" style="color:var(--bad)">${esc(r.inspection_error)}</div>` : ""}
+        ${r.attention ? `<div class="panel"><h2>Attention (head-averaged)</h2><div class="muted mono" style="margin-bottom:8px">${esc((r.tokens || []).join("|"))}</div><div class="heat" id="heat"></div></div>` : ""}
+        ${acts.length ? `<div class="panel"><h2>Residual-stream norm by layer</h2><div class="scroll"><table>${acts.map(([n, v]) => `<tr><td class="mono">${esc(n)}</td><td>${fmt(v)}</td><td style="width:60%"><div class="bar" style="width:${(100 * v / Math.max(...acts.map((a) => a[1]))).toFixed(1)}%"></div></td></tr>`).join("")}</table></div></div>` : ""}
+        <div class="panel"><h2>Weights</h2><div class="scroll"><table><tr><th>parameter</th><th>shape</th><th>mean</th><th>std</th><th>norm</th><th></th></tr>${weights}</table></div></div>`;
+      state.pendingHeat = r.attention ? r : null;
+    } catch (err) { body = `<div class="panel" style="color:var(--bad)">${esc(err.message)}</div>`; }
+  }
+  return `<div class="panel"><div class="row"><select id="inspect-ckpt"><option value="">checkpoint…</option>${options}</select>
+    <input id="inspect-text" size="40" value="${esc(document.getElementById("inspect-text")?.value ?? "The quick brown fox")}">
+    <button class="primary" id="inspect-go">Inspect</button></div></div>${body}`;
+}
+
+async function render(extra) {
+  const view = document.getElementById("view");
+  try {
+    state.overview = await api("/api/overview");
+    const html = state.tab === "runs" ? await renderRuns() : state.tab === "registry" ? await renderRegistry()
+      : state.tab === "benchmarks" ? await renderBenchmarks() : await renderInspect(extra);
+    view.innerHTML = html;
+    if (state.pendingHeat && state.tab === "inspect") {
+      const host = document.getElementById("heat");
+      for (const layer of state.pendingHeat.attention) {
+        const box = document.createElement("div");
+        box.innerHTML = `<div class="mono">layer ${layer.layer} · ${esc(layer.type)}${layer.window ? ` · window ${layer.window}` : ""}</div>`;
+        if (layer.supported) { box.appendChild(heatmap(layer.weights, state.pendingHeat.tokens)); box.insertAdjacentHTML("beforeend", `<div class="muted mono">head entropy ${layer.head_entropy.map((h) => h.toFixed(2)).join(" ")}</div>`); }
+        else box.insertAdjacentHTML("beforeend", '<div class="muted">attention weights not available for this layer type</div>');
+        host.appendChild(box);
+      }
+      state.pendingHeat = null;
+    }
+    document.getElementById("refresh").textContent = `updated ${new Date().toLocaleTimeString()}`;
+  } catch (err) { view.innerHTML = `<div class="panel" style="color:var(--bad)">${esc(err.message)}</div>`; }
+}
+
+document.getElementById("tabs").addEventListener("click", (e) => {
+  const tab = e.target.dataset.tab; if (!tab) return;
+  state.tab = tab; document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab)); render();
+});
+document.getElementById("view").addEventListener("click", (e) => {
+  const run = e.target.closest("[data-run]"); if (run) { state.run = run.dataset.run; render(); return; }
+  const ins = e.target.closest("[data-inspect]");
+  if (ins) { state.tab = "inspect"; document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === "inspect")); render(ins.dataset.inspect); return; }
+  if (e.target.id === "inspect-go") render(document.getElementById("inspect-ckpt").value);
+});
+setInterval(() => { if (state.tab === "runs" && state.overview && state.overview.runs.some((r) => r.live)) render(); }, 5000);
+render();
+</script>
+</body>
+</html>

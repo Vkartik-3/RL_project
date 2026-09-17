@@ -1,0 +1,4 @@
+pairwise:
+  command: forgeline rlaif pairwise --n-prompts 10 --candidates 4
+constitutional:
+  command: forgeline rlaif constitutional --n-prompts 10 --n-principles 2

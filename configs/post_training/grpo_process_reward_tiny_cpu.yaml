@@ -1,0 +1,18 @@
+# Process-reward GRPO: dense step-level rewards (γ-discounted) + final answer, REINFORCE objective.
+name: grpo-process-reward-tiny-cpu
+algorithm: grpo
+model_preset: tiny
+model: {block_size: 128, dropout: 0.0}
+data: {kind: verifiable, path: data/samples/verifiable/arithmetic_tasks.jsonl, tokenizer: char, max_length: 32}
+reward: {type: process, gamma: 0.9, step_weight: 0.5, execute_code: false}
+trainer:
+  max_steps: 6
+  batch_size: 2
+  eval_every: 0
+  log_every: 1
+  device: cpu
+  optimizer: {learning_rate: 5.0e-6, weight_decay: 0.01, beta2: 0.999, decay_only_matrices: false}
+  schedule: {name: constant, warmup_steps: 0}
+  checkpoint: {directory: checkpoints, save_every: 0}
+algorithm_params: {group_size: 4, prompts_per_step: 2, objective: reinforce, rollout: {max_new_tokens: 32, temperature: 0.9}}
+output_dir: runs/grpo-process-reward-tiny-cpu

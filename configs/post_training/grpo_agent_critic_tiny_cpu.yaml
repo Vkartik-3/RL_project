@@ -1,0 +1,23 @@
+# Generator + critic agent GRPO: verifiable tagged-answer reward plus α·critic score (α = 0.3, heuristic critic).
+# Swap the critic to an LLM judge in code with CriticReward(mode="llm", critic_fn=...).
+name: grpo-agent-critic-tiny-cpu
+algorithm: grpo
+model_preset: tiny
+model: {block_size: 256, dropout: 0.0}
+data: {kind: verifiable, path: data/samples/verifiable/tool_tasks.jsonl, tokenizer: char}
+reward:
+  type: composite
+  providers:
+    - {type: tagged, format_bonus: true, weight: 1.0}
+    - {type: critic, mode: heuristic, weight: 0.3}
+trainer:
+  max_steps: 4
+  batch_size: 2
+  eval_every: 0
+  log_every: 1
+  device: cpu
+  optimizer: {learning_rate: 5.0e-6, weight_decay: 0.01, beta2: 0.999, decay_only_matrices: false}
+  schedule: {name: constant, warmup_steps: 0}
+  checkpoint: {directory: checkpoints, save_every: 0}
+algorithm_params: {group_size: 2, prompts_per_step: 1, clip_ratio: 0.2, kl_coef: 0.04, agent: true}
+output_dir: runs/grpo-agent-critic-tiny-cpu

@@ -1,0 +1,2 @@
+Hardware: single NVIDIA GPU (world_size = 1 recorded in the run file). Exact GPU model, driver and library versions were not recorded.
+Base model: Qwen/Qwen2.5-7B-Instruct via the huggingface backend (HFPolicy), LoRA adapters, fp16 autocast with GradScaler.

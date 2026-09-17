@@ -1,0 +1,2 @@
+# torchrun --nproc_per_node=N -m forgeline.cli.main train <manifest> --set distributed.strategy=ddp
+distributed: {strategy: ddp, backend: auto}

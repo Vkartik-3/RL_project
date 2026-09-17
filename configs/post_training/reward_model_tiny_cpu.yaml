@@ -1,0 +1,16 @@
+name: reward-model-tiny-cpu
+algorithm: reward_model
+model_preset: tiny
+model: {block_size: 64, dropout: 0.0}
+data: {kind: preference, path: data/samples/preference/arithmetic_pairs.jsonl, tokenizer: char, val_fraction: 0.1, max_length: 16}
+trainer:
+  max_steps: 60
+  batch_size: 8
+  eval_every: 20
+  log_every: 10
+  device: cpu
+  optimizer: {learning_rate: 1.0e-3, weight_decay: 0.01}
+  schedule: {name: constant, warmup_steps: 0}
+  checkpoint: {directory: checkpoints, save_every: 0}
+algorithm_params: {freeze_backbone: false}
+output_dir: runs/reward-model-tiny-cpu

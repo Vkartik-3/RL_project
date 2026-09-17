@@ -1,0 +1,10 @@
+{
+  "champion": "assistant:v1",
+  "challenger": "assistant:v2",
+  "challenger_percent": 10.0,
+  "shadow": "assistant:v3",
+  "shadow_percent": 5.0,
+  "salt": "forgeline-routing",
+  "pinned": {},
+  "disabled": []
+}

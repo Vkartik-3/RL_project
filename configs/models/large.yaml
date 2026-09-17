@@ -1,0 +1,4 @@
+# 24-layer / 1024-d GQA model (16 query heads, 4 KV heads, 2048 context). Needs a GPU.
+name: large
+algorithm: pretrain
+model_preset: large

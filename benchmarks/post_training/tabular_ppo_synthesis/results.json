@@ -1,0 +1,137 @@
+{
+  "evidence": "raw_log",
+  "heldout_record_reward_policy_dependent": false,
+  "record_reward_by_evaluation_harness": {
+    "Rule-based baseline": {
+      "mean": 0.808,
+      "std": 0.0151,
+      "max": 0.8567,
+      "min": 0.7739,
+      "pct_above_0.6": 100.0,
+      "pct_above_0.75": 100.0,
+      "improvement_pct": 61.6
+    },
+    "MLP-PPO (128\u2192256\u2192256)": {
+      "mean": 0.808,
+      "std": 0.0151,
+      "max": 0.8567,
+      "min": 0.7739,
+      "pct_above_0.6": 100.0,
+      "pct_above_0.75": 100.0,
+      "improvement_pct": 61.6,
+      "train_time_s": 2.4
+    },
+    "LLM-PPO (Llama-2-7B + LoRA r=8)": {
+      "mean": 0.808,
+      "std": 0.0151,
+      "max": 0.8567,
+      "min": 0.7739,
+      "pct_above_0.6": 100.0,
+      "pct_above_0.75": 100.0,
+      "improvement_pct": 61.6,
+      "train_time_s": 0.0
+    }
+  },
+  "leave_one_molecule_out": [
+    {
+      "held_out": "Aspirin",
+      "train_reward": 0.8248230838775634,
+      "heldout_record_reward": 0.8965930769230771
+    },
+    {
+      "held_out": "Ibuprofen",
+      "train_reward": 0.8360318326950074,
+      "heldout_record_reward": 0.851758076923077
+    },
+    {
+      "held_out": "Naproxen",
+      "train_reward": 0.858636827468872,
+      "heldout_record_reward": 0.761338076923077
+    },
+    {
+      "held_out": "Paracetamol",
+      "train_reward": 0.8294193315505981,
+      "heldout_record_reward": 0.878208076923077
+    },
+    {
+      "held_out": "Ketoprofen",
+      "train_reward": 0.8469743251800537,
+      "heldout_record_reward": 0.8079880769230771
+    }
+  ],
+  "revalidation_required": false,
+  "notes": [
+    "All held-out numbers score dataset records with the rule reward and are independent of the trained network (the tabular policy does not generate conditions). They describe dataset quality, not policy improvement.",
+    "The 'improvement' percentages in the source logs are relative to a fixed 0.5 reference, not to a trained baseline.",
+    "The three rows of the evaluation harness are identical because they score the same records.",
+    "Training reward is identical in all 5 epochs (0.85767): it is the mean rule score of the training records, independent of the policy.",
+    "The evaluation-harness rows (rule baseline, MLP-PPO, and an LLM-PPO row labelled Llama-2-7B with train time 0.0 s) are three copies of the same record statistic (0.808); the LLM row was not a run. Do not cite them as method results.",
+    "Leave-one-molecule-out values are per-molecule means of the rule score over dataset records (reproduced exactly); they measure how the molecules' recorded outcomes differ, not generalisation of a policy.",
+    "All values in this record are dataset statistics reproduced exactly from the listed files by tests/unit/test_benchmark_semantics.py; they are identical for any policy."
+  ],
+  "ledger_status": {
+    "labeled_expanded_train_reward_0.8577": "CARRY_FORWARD_WITH_INTERPRETATION_NOTE",
+    "labeled_expanded_heldout_0.8121": "CARRY_FORWARD_WITH_INTERPRETATION_NOTE",
+    "improvement_percentages_vs_0.5": "DO_NOT_USE",
+    "legacy_term_literature_and_improvable": "CARRY_FORWARD_WITH_INTERPRETATION_NOTE",
+    "leave_one_molecule_out": "CARRY_FORWARD_WITH_INTERPRETATION_NOTE",
+    "small_labeled_first_run_statistics": "CARRY_FORWARD_WITH_INTERPRETATION_NOTE",
+    "harness_rule_baseline_and_mlp_rows_0.808": "CARRY_FORWARD_WITH_INTERPRETATION_NOTE",
+    "harness_llm_ppo_llama2_row": "DO_NOT_USE",
+    "harness_mlp_train_time_2.4s": "CARRY_FORWARD_WITH_INTERPRETATION_NOTE"
+  },
+  "labeled_expanded_records": {
+    "epoch_rewards": [
+      0.8576667964458465,
+      0.8576667964458465,
+      0.8576667964458465,
+      0.8576667964458465,
+      0.8576667964458465
+    ],
+    "epoch_losses": [
+      0.2081794872879982,
+      0.011082712411880493,
+      -0.033987422659993174,
+      -0.03350643627345562,
+      -0.033565643876791
+    ],
+    "final_train_reward": 0.8576667964458465,
+    "heldout_record_reward": {
+      "num_trajectories": 100,
+      "average_reward": 0.8120846192985227,
+      "max_reward": 0.8851056839189062,
+      "min_reward": 0.759130597867536,
+      "reward_std": 0.021895042873580243,
+      "successful_trajectories": 100,
+      "high_yield_trajectories": 100,
+      "baseline_reward": 0.5,
+      "improvement": 62.41692385970454
+    },
+    "dataset": "data/samples/synthesis/trajectories_labeled_expanded.jsonl (500 flat records; split 400/100 in file order)",
+    "reproduction": "rule-score mean of records 0-399 = 0.85766679 (train) and 400-499 = 0.81208462 (held out), exact"
+  },
+  "literature_records_legacy_efficiency_term": {
+    "dataset": "data/samples/synthesis/trajectories_literature.jsonl (split 400/100 in file order)",
+    "reward": "0.4\u00b7yield + 0.3\u00b7selectivity + 0.2\u00b7(1 \u2212 risk) + 0.1\u00b7(1 \u2212 steps/10)  (earlier efficiency term)",
+    "baseline": 0.84005125,
+    "heldout_record_reward": 0.8010650000000001,
+    "heldout_above_baseline_count": 1,
+    "reproduction": "exact (0.84005125 / 0.80106500 / 1 of 100)"
+  },
+  "improvable_records_legacy_efficiency_term": {
+    "dataset": "data/samples/synthesis/trajectories_improvable.jsonl (split 400/100 in file order)",
+    "reward": "same earlier efficiency term",
+    "baseline": 0.6033490000000001,
+    "heldout_record_reward": 0.5934710000000003,
+    "heldout_above_baseline_count": 30,
+    "reproduction": "exact (0.60334900 / 0.59347100 / 30 of 100)"
+  },
+  "small_labeled_records_first_run": {
+    "dataset": "data/samples/synthesis/trajectories_labeled_small.jsonl (100 flat records; split 80/20 in file order)",
+    "train_record_reward": 0.8558842161,
+    "heldout_record_reward": 0.8181071937,
+    "heldout_n": 20,
+    "improvement_vs_0.5": 63.62,
+    "reproduction": "exact; the recorded policy loss was ~1e-16 because advantages were identically zero"
+  }
+}

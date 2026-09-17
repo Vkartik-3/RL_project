@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv*/
+venv/
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+
+# run artifacts
+runs/
+checkpoints/
+registry/
+data/prepared/
+*.pt
+*.gguf
+wandb/

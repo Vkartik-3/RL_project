@@ -1,0 +1,22 @@
+name: sft-tiny-cpu
+algorithm: sft
+model_preset: tiny
+model: {block_size: 64, dropout: 0.0}
+checkpoint_path: ""            # optionally start from runs/pretrain-tiny-cpu/checkpoints/final
+data:
+  kind: supervised
+  path: data/samples/supervised/arithmetic_sft.jsonl
+  tokenizer: char
+  val_fraction: 0.1
+  max_length: 48
+trainer:
+  max_steps: 100
+  batch_size: 8
+  eval_every: 25
+  log_every: 10
+  device: cpu
+  optimizer: {learning_rate: 1.0e-3, weight_decay: 0.01}
+  schedule: {name: cosine, warmup_steps: 10, decay_steps: 100, min_lr: 1.0e-4}
+  checkpoint: {directory: checkpoints, save_every: 50}
+algorithm_params: {mask_prompt: true}
+output_dir: runs/sft-tiny-cpu

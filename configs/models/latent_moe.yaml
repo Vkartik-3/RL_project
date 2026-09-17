@@ -1,0 +1,4 @@
+# Multi-head latent attention + sigmoid-gated MoE with shared experts + multi-token prediction. GPU cluster scale.
+name: latent_moe
+algorithm: pretrain
+model_preset: latent_moe_27l

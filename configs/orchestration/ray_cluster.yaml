@@ -1,0 +1,12 @@
+# Orchestration block for joining an existing Ray cluster with one GPU per rollout worker.
+# Paste under `orchestration:` in a post-training manifest (ppo / grpo / dapo). Not validated on a multi-node cluster.
+type: ray
+address: auto
+rollout_workers: 4
+reward_workers: 8
+cpus_per_worker: 4
+gpus_per_worker: 1          # rollout/evaluation workers only; reward workers stay CPU-only
+placement_strategy: SPREAD
+max_restarts: 2
+max_call_retries: 3
+task_timeout_s: 600

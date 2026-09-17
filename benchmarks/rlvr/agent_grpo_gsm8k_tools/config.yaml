@@ -1,0 +1,15 @@
+manifest: configs/post_training/agent_grpo_gsm8k_qwen7b_lora.yaml
+algorithm: grpo (agent mode)
+backend: huggingface
+base_model: Qwen/Qwen2.5-7B-Instruct
+data: GSM8K train split formatted as tool-use tasks (forgeline data gsm8k)
+group_size: 4
+prompts_per_step: 2
+clip_ratio: 0.2
+kl_coef: 0.04
+optimizer: adamw lr=5e-6 (torch default wd=0.01)
+agent:
+  max_turns: 3
+  max_new_tokens: 128
+  temperature: 0.9
+  max_context_tokens: 256

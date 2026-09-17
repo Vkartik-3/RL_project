@@ -1,0 +1,27 @@
+{
+  "evidence": "raw_log",
+  "pairwise_judge_rule_based": {
+    "n_prompts": 10,
+    "n_candidates": 40,
+    "n_comparisons": 60,
+    "n_pairs": 60,
+    "pairs_per_prompt": 6.0,
+    "avg_chosen_len": 312,
+    "avg_rejected_len": 194,
+    "len_gap": 118
+  },
+  "constitutional_rule_based": {
+    "n_examples": 10,
+    "sft_records": 10,
+    "dpo_records": 10,
+    "avg_length_delta": 53.0
+  },
+  "revalidation_required": false,
+  "notes": [
+    "Both runs use the deterministic rule-based generator/judge (no model). `forgeline rlaif pairwise` and `forgeline rlaif constitutional` reproduce these statistics exactly (checked in tests/integration/test_cli_pipeline.py)."
+  ],
+  "ledger_status": {
+    "pairwise_judge_rule_based": "CARRY_FORWARD",
+    "constitutional_rule_based": "CARRY_FORWARD"
+  }
+}

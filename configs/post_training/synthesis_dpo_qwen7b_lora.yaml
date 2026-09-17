@@ -1,0 +1,18 @@
+# Length-normalised DPO from the SFT adapter (GPU). Recorded under benchmarks/post_training/dpo_synthesis.
+name: synthesis-dpo-qwen7b-lora
+algorithm: dpo
+backend: {type: huggingface, model_name: Qwen/Qwen2.5-7B-Instruct, lora_r: 8, lora_alpha: 16, torch_dtype: float16}
+checkpoint_path: runs/synthesis-sft-qwen7b-lora/checkpoints/final   # start from the SFT adapter
+data: {kind: trajectories, path: data/samples/synthesis/trajectories_literature.jsonl, extra: {pairs_per_molecule: 20, max_prompt_length: 384, max_response_length: 128}}
+trainer:
+  max_steps: 40              # 80 pairs × 2 epochs / batch 4
+  batch_size: 4
+  eval_every: 0
+  log_every: 5
+  device: cuda
+  optimizer: {learning_rate: 1.0e-5, weight_decay: 0.01, beta2: 0.999, decay_only_matrices: false}
+  schedule: {name: constant, warmup_steps: 0}
+  precision: {dtype: float16}
+  checkpoint: {directory: checkpoints, save_every: 20}
+algorithm_params: {beta: 0.1, logprob_reduction: mean}
+output_dir: runs/synthesis-dpo-qwen7b-lora

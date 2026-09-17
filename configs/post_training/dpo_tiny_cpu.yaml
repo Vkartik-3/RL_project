@@ -1,0 +1,20 @@
+name: dpo-tiny-cpu
+algorithm: dpo
+model_preset: tiny
+model: {block_size: 64, dropout: 0.0}
+checkpoint_path: ""            # start from an SFT checkpoint in practice
+data: {kind: preference, path: data/samples/preference/arithmetic_pairs.jsonl, tokenizer: char, val_fraction: 0.1, max_length: 16}
+trainer:
+  max_steps: 60
+  batch_size: 4
+  eval_every: 20
+  log_every: 10
+  device: cpu
+  optimizer: {learning_rate: 5.0e-4, weight_decay: 0.01}
+  schedule: {name: constant, warmup_steps: 0}
+  checkpoint: {directory: checkpoints, save_every: 0}
+algorithm_params:
+  beta: 0.1
+  logprob_reduction: sum       # `mean` reproduces the length-normalised configuration under benchmarks/post_training/dpo
+  reference_free: false
+output_dir: runs/dpo-tiny-cpu

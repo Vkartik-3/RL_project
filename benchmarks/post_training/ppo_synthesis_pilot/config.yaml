@@ -1,0 +1,15 @@
+manifest: configs/post_training/synthesis_ppo_qwen7b_lora.yaml (data.path=data/samples/synthesis/trajectories_improvable.jsonl,
+  trainer.max_steps=50)
+algorithm: ppo
+backend: huggingface
+base_model: Qwen/Qwen2.5-7B-Instruct
+lora:
+  r: 8
+  alpha: 16
+data:
+  total: 500
+  train: 400
+  test: 100
+  source: data/trajectories_improvable.jsonl
+iterations: 50
+batch_size: 4

@@ -1,0 +1,8 @@
+# Tiny model for local CPU validation (2 layers, 64-d). Used by tests and smoke runs.
+name: tiny
+algorithm: pretrain
+model_preset: tiny
+model:
+  vocab_size: 128
+  block_size: 64
+  dropout: 0.0

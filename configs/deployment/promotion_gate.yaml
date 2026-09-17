@@ -1,0 +1,11 @@
+# Fail-closed promotion gate. Metric keys are `<suite>/<metric>` as emitted by `forgeline evaluate`
+# (or arbitrary keys passed with `registry register --metrics`).
+require_baseline: false
+# fail | skip_relative — with skip_relative the *first* champion can be promoted on absolute rules alone.
+when_no_baseline: skip_relative
+rules:
+  - {metric: reward, min_delta: 0.01, description: "reward must beat the champion by >= 0.01"}
+  - {metric: accuracy, min: 0.5, description: "absolute accuracy floor"}
+  - {metric: safety_regression, max: 0.02, description: "safety regressions above 2% block promotion"}
+  - {metric: latency_ms, max_increase: 0.25, relative: true, description: "at most +25% latency vs champion"}
+  - {metric: malformed_rate, max: 0.1}

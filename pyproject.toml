@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "forgeline"
+version = "0.1.0"
+description = "End-to-end post-training, distributed training, evaluation, inference and model-lifecycle framework for language models."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Kartik Vadhawana" }]
+keywords = ["llm", "rlhf", "rlvr", "dpo", "ppo", "grpo", "post-training", "inference", "model-registry"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "License :: OSI Approved :: MIT License",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+  "torch>=2.1",
+  "numpy>=1.24",
+  "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+training = ["tqdm>=4.65", "tiktoken>=0.5"]
+huggingface = ["transformers>=4.40", "datasets>=2.18", "peft>=0.10", "accelerate>=0.27"]
+distributed = ["deepspeed>=0.13"]
+ray = ["ray[default]>=2.9"]
+serving = ["fastapi>=0.110", "uvicorn>=0.27"]
+observability = ["wandb>=0.16", "tensorboard>=2.15"]
+chemistry = ["rdkit>=2023.9"]
+dev = ["pytest>=8", "pytest-timeout>=2.2", "httpx>=0.27", "ruff>=0.4"]
+
+[project.scripts]
+forgeline = "forgeline.cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+forgeline = ["py.typed", "dashboard/static/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "cuda: requires a CUDA device",
+  "multi_gpu: requires two or more CUDA devices",
+  "distributed: requires a launched torch.distributed job",
+  "slow: long-running local test",
+  "optional_dependency: requires an optional extra (transformers, peft, ...)",
+]
+addopts = "-ra"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

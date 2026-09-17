@@ -1,0 +1,175 @@
+{
+  "evidence": "raw_log",
+  "metrics": {
+    "iterations": 200,
+    "best_train_reward": 0.9007
+  },
+  "log_every_10_iterations": [
+    {
+      "iteration": 10,
+      "reward_mean": 0.8476,
+      "reward_std": 0.057,
+      "loss": 0.2267,
+      "kl": -0.0001
+    },
+    {
+      "iteration": 20,
+      "reward_mean": 0.8685,
+      "reward_std": 0.027,
+      "loss": 0.2712,
+      "kl": 0.0
+    },
+    {
+      "iteration": 30,
+      "reward_mean": 0.8609,
+      "reward_std": 0.065,
+      "loss": 0.2624,
+      "kl": -0.0007
+    },
+    {
+      "iteration": 40,
+      "reward_mean": 0.8793,
+      "reward_std": 0.035,
+      "loss": 0.0807,
+      "kl": -0.0008
+    },
+    {
+      "iteration": 50,
+      "reward_mean": 0.8483,
+      "reward_std": 0.081,
+      "loss": 0.116,
+      "kl": -0.0021
+    },
+    {
+      "iteration": 60,
+      "reward_mean": 0.8634,
+      "reward_std": 0.022,
+      "loss": 0.1518,
+      "kl": -0.002
+    },
+    {
+      "iteration": 70,
+      "reward_mean": 0.8789,
+      "reward_std": 0.018,
+      "loss": 0.1345,
+      "kl": -0.0018
+    },
+    {
+      "iteration": 80,
+      "reward_mean": 0.8781,
+      "reward_std": 0.028,
+      "loss": 0.0415,
+      "kl": -0.003
+    },
+    {
+      "iteration": 90,
+      "reward_mean": 0.8276,
+      "reward_std": 0.073,
+      "loss": 0.0936,
+      "kl": -0.0023
+    },
+    {
+      "iteration": 100,
+      "reward_mean": 0.8288,
+      "reward_std": 0.053,
+      "loss": 0.034,
+      "kl": -0.004
+    },
+    {
+      "iteration": 110,
+      "reward_mean": 0.8305,
+      "reward_std": 0.069,
+      "loss": 0.2992,
+      "kl": -0.0019
+    },
+    {
+      "iteration": 120,
+      "reward_mean": 0.85,
+      "reward_std": 0.02,
+      "loss": 0.0271,
+      "kl": -0.0038
+    },
+    {
+      "iteration": 130,
+      "reward_mean": 0.8483,
+      "reward_std": 0.039,
+      "loss": 0.2742,
+      "kl": -0.0022
+    },
+    {
+      "iteration": 140,
+      "reward_mean": 0.8333,
+      "reward_std": 0.079,
+      "loss": 0.1548,
+      "kl": -0.0022
+    },
+    {
+      "iteration": 150,
+      "reward_mean": 0.8464,
+      "reward_std": 0.062,
+      "loss": 0.0312,
+      "kl": -0.0073
+    },
+    {
+      "iteration": 160,
+      "reward_mean": 0.8352,
+      "reward_std": 0.061,
+      "loss": 0.1338,
+      "kl": -0.0044
+    },
+    {
+      "iteration": 170,
+      "reward_mean": 0.8571,
+      "reward_std": 0.021,
+      "loss": 0.2945,
+      "kl": -0.0055
+    },
+    {
+      "iteration": 180,
+      "reward_mean": 0.8733,
+      "reward_std": 0.015,
+      "loss": 0.2774,
+      "kl": -0.0037
+    },
+    {
+      "iteration": 190,
+      "reward_mean": 0.7811,
+      "reward_std": 0.047,
+      "loss": 0.1516,
+      "kl": -0.0076
+    },
+    {
+      "iteration": 200,
+      "reward_mean": 0.8621,
+      "reward_std": 0.025,
+      "loss": 0.1335,
+      "kl": -0.0105
+    }
+  ],
+  "heldout_record_reward": {
+    "average_reward": 0.808,
+    "improvement": 61.6,
+    "pct_above_threshold": 100.0,
+    "high_quality_count": 100,
+    "total_evaluated": 100
+  },
+  "heldout_record_reward_policy_dependent": false,
+  "revalidation_required": false,
+  "revalidation_recommended": true,
+  "notes": [
+    "Training rewards score the policy's generated conditions (policy-dependent). The held-out figure scores dataset records (policy-independent).",
+    "The loss/objective is preserved exactly (sequence-mean ratio, clip 0.2, value MSE 0.5, detached KL, sampled-token entropy 0.01). The recorded run divided the summed PPO-epoch losses by 4 before one optimizer step; the framework averages over PPO epochs (divides by 3). Adam is invariant to a constant gradient scale apart from epsilon and gradient-norm clipping, so the result is expected to transfer, but reproducing the exact numbers is recommended before using them as a regression target.",
+    "The run log notes the script raised an error after saving results; training and evaluation had completed.",
+    "Training rewards do not measure policy quality in this run. Records carry nested `outcomes`, which take precedence over any keys decoded from the generated JSON, and the rule reward reads only yield/selectivity/safety/steps, so each iteration's reward is the mean rule score of the 4 sampled training records (pinned by tests/unit/test_benchmark_semantics.py). Sampling 4 random records from records 0-399 reproduces the logged statistics: mean of logged iteration rewards 0.848 simulated vs 0.850 recorded, and a best-of-200 batch mean with median 0.9014 (P(>=0.9007) = 0.56) vs the recorded 0.9007. The held-out value equals the pure rule score of records 400-499, consistent with the reward model falling back to the rule (untrained learned reward model).",
+    "The JSON was assembled from the console log (values rounded to 4 decimals, logged every 10 iterations); iteration 0.9007 is not among the logged iterations.",
+    "The 100 held-out records are all Ketoprofen: the file is ordered by molecule (100 each) and the split takes the last 20%."
+  ],
+  "ledger_status": {
+    "iterations_completed": "CARRY_FORWARD_WITH_INTERPRETATION_NOTE",
+    "best_train_reward": "CARRY_FORWARD_WITH_INTERPRETATION_NOTE",
+    "logged_reward_means": "CARRY_FORWARD_WITH_INTERPRETATION_NOTE",
+    "logged_kl": "CARRY_FORWARD_WITH_INTERPRETATION_NOTE",
+    "heldout_record_reward": "CARRY_FORWARD_WITH_INTERPRETATION_NOTE",
+    "improvement_vs_0.5": "DO_NOT_USE"
+  }
+}

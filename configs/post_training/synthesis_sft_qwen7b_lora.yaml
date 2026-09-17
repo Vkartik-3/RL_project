@@ -1,0 +1,17 @@
+# SFT of a 7B instruct model with LoRA on high-reward synthesis records (GPU).
+# Configuration recorded under benchmarks/post_training/sft_synthesis.
+name: synthesis-sft-qwen7b-lora
+algorithm: sft
+backend: {type: huggingface, model_name: Qwen/Qwen2.5-7B-Instruct, lora_r: 8, lora_alpha: 16, lora_dropout: 0.05, torch_dtype: float16, gradient_checkpointing: true}
+data: {kind: trajectories, path: data/samples/synthesis/trajectories_literature.jsonl, max_length: 512, extra: {reward_threshold: 0.88}}
+trainer:
+  max_steps: 105            # 139 pairs × 3 epochs / batch 4
+  batch_size: 4
+  eval_every: 0
+  log_every: 5
+  device: cuda
+  optimizer: {learning_rate: 2.0e-5, weight_decay: 0.01, beta2: 0.999, decay_only_matrices: false}
+  schedule: {name: constant, warmup_steps: 0}
+  precision: {dtype: float16}
+  checkpoint: {directory: checkpoints, save_every: 35}
+output_dir: runs/synthesis-sft-qwen7b-lora

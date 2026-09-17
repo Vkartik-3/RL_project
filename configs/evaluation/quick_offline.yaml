@@ -1,0 +1,6 @@
+# forgeline evaluate --checkpoint <dir> --suites mmlu gsm8k humaneval --offline
+suites: [mmlu, hellaswag, arc, gsm8k, truthfulqa, humaneval]
+offline: true
+n_shot: 0
+max_tasks: 0
+max_tokens: 32

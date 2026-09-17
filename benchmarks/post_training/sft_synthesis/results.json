@@ -1,0 +1,22 @@
+{
+  "evidence": "raw_log",
+  "metrics": {
+    "num_sft_pairs": 139,
+    "epochs": 3,
+    "loss_per_epoch": [
+      1.6629795244761876,
+      1.043309394802366,
+      1.0077595336096627
+    ],
+    "best_loss": 1.0077595336096627
+  },
+  "revalidation_required": false,
+  "notes": [
+    "Standard causal-LM cross-entropy with prompt tokens masked (label = -100).",
+    "A method-comparison table attributed a final reward of 0.412 to this stage; no retained file contains it (this run logged loss only). Status of that value: NEEDS_EVIDENCE_RECOVERY."
+  ],
+  "ledger_status": {
+    "num_sft_pairs": "CARRY_FORWARD",
+    "loss_per_epoch": "CARRY_FORWARD"
+  }
+}

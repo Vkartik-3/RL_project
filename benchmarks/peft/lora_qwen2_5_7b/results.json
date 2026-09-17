@@ -1,0 +1,17 @@
+{
+  "evidence": "documented_measurement",
+  "metrics": {
+    "trainable_parameters_millions": 5.05,
+    "total_parameters_billions": 7.62,
+    "trainable_fraction_percent": 0.066
+  },
+  "notes": [
+    "Parameter accounting reported by PEFT for LoRA r=8, alpha=16 on q/k/v/o projections.",
+    "Verified arithmetically: 28 layers \u00d7 8 \u00d7 [(3584+3584) + (3584+512) + (3584+512) + (3584+3584)] = 5,046,272."
+  ],
+  "revalidation_required": false,
+  "ledger_status": {
+    "trainable_parameters": "CARRY_FORWARD",
+    "total_parameters": "CARRY_FORWARD"
+  }
+}

@@ -1,0 +1,13 @@
+manifest: configs/post_training/synthesis_sft_qwen7b_lora.yaml
+algorithm: sft
+backend: huggingface
+base_model: Qwen/Qwen2.5-7B-Instruct
+data: data/samples/synthesis/trajectories_literature.jsonl (records with rule reward
+  >= 0.88)
+reward_threshold: 0.88
+lora:
+  r: 8
+  alpha: 16
+optimizer: adamw lr=2e-5 (torch default wd=0.01)
+batch_size: 4
+precision: fp16 + GradScaler

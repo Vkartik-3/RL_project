@@ -1,0 +1,18 @@
+# DAPO on generated synthesis conditions (GPU).
+name: synthesis-dapo-qwen7b-lora
+algorithm: dapo
+backend: {type: huggingface, model_name: Qwen/Qwen2.5-7B-Instruct, lora_r: 8, lora_alpha: 16, torch_dtype: float16}
+data: {kind: trajectories, path: data/samples/synthesis/trajectories_literature.jsonl}
+reward: {type: synthesis_rule}
+trainer:
+  max_steps: 200
+  batch_size: 2
+  eval_every: 0
+  log_every: 10
+  device: cuda
+  optimizer: {learning_rate: 5.0e-6, weight_decay: 0.01, beta2: 0.999, decay_only_matrices: false}
+  schedule: {name: constant, warmup_steps: 0}
+  precision: {dtype: float16}
+  checkpoint: {directory: checkpoints, save_every: 50}
+algorithm_params: {group_size: 4, prompts_per_step: 2, clip_eps_low: 0.2, clip_eps_high: 0.28, kl_coef: 0.04, entropy_coef: 0.001, rollout: {max_new_tokens: 128, temperature: 0.9, max_prompt_length: 512}}
+output_dir: runs/synthesis-dapo-qwen7b-lora

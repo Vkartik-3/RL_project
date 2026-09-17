@@ -1,0 +1,2 @@
+# Fully sharded data parallel with size-based auto-wrapping and bf16 mixed precision (CUDA only).
+distributed: {strategy: fsdp, backend: nccl, fsdp_min_params_to_wrap: 100000}

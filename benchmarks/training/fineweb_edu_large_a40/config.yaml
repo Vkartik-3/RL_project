@@ -1,0 +1,20 @@
+manifest: configs/training/pretrain_large_gpu.yaml
+model_preset: large
+model:
+  n_layer: 24
+  n_head: 16
+  n_kv_head: 4
+  n_embd: 1024
+  block_size: 2048
+  dropout: 0.1
+data:
+  dataset: HuggingFaceFW/fineweb-edu (sample-10BT, streamed)
+  tokenizer: Qwen/Qwen2.5-0.5B
+trainer:
+  batch_size: 8
+  tokens_per_step: 16384
+  max_steps: 30000
+  optimizer: adamw lr=1.5e-4 wd=0.1 grad_clip=1.0
+  schedule: cosine warmup=200
+  precision: bfloat16 autocast
+  compile_model: true

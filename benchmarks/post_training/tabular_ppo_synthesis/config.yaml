@@ -1,0 +1,12 @@
+algorithm: tabular_ppo
+command: forgeline synthesis-ppo
+network: "128 \u2192 256 \u2192 256 shared, actor 256 \u2192 32 softmax, critic 256\
+  \ \u2192 1"
+optimizer: adam lr=1e-4
+epochs: 5
+batch_size: 8
+clip_ratio: 0.2
+value_coef: 0.5
+entropy_coef: 0.01
+features: 8 normalised chemistry features + 100-bit Morgan fingerprint (zeros without
+  RDKit)

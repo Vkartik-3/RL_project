@@ -1,0 +1,23 @@
+{
+  "evidence": "documented_measurement",
+  "metrics": {
+    "parameters_millions": 10.6,
+    "best_val_loss": 1.479,
+    "best_val_loss_step": 1500,
+    "max_steps": 5000,
+    "wall_clock_minutes_approx": 45,
+    "generation_tokens_per_second_kv_cache": 49
+  },
+  "notes": [
+    "Character-level tokenizer, vocab_size 65, ~1.1 MB English text corpus (~300K tokens).",
+    "Wall clock and tokens/sec are approximate values as documented; per-step logs were not retained.",
+    "Parameter count recomputed from the `small` preset with vocabulary 65: 10.65M."
+  ],
+  "revalidation_required": false,
+  "ledger_status": {
+    "parameters": "CARRY_FORWARD",
+    "best_val_loss": "CARRY_FORWARD",
+    "wall_clock": "CARRY_FORWARD_WITH_INTERPRETATION_NOTE",
+    "generation_tokens_per_second": "CARRY_FORWARD_WITH_INTERPRETATION_NOTE"
+  }
+}

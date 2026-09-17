@@ -1,0 +1,75 @@
+{
+  "evidence": "documented_measurement",
+  "metrics": {
+    "final_train_loss": 3.5478,
+    "best_val_loss": 3.5834,
+    "best_checkpoint_step": 29500,
+    "total_steps": 30000,
+    "tokens_processed_millions_approx": 491,
+    "throughput_tokens_per_second_peak": 20900,
+    "throughput_tokens_per_second_average": 20700,
+    "throughput_with_torch_compile_approx": 20800,
+    "throughput_without_torch_compile_approx": 15000,
+    "generation_tokens_per_second_kv_cache_approx": 53,
+    "parameters_millions": 421.15,
+    "wall_clock_hours_documented": 14
+  },
+  "loss_progression": [
+    {
+      "step": 0,
+      "loss": 12.12
+    },
+    {
+      "step": 1000,
+      "loss": 5.44
+    },
+    {
+      "step": 3000,
+      "loss": 4.65
+    },
+    {
+      "step": 5000,
+      "loss": 4.3
+    },
+    {
+      "step": 10000,
+      "loss": 4.0
+    },
+    {
+      "step": 20000,
+      "loss": 3.7
+    },
+    {
+      "step": 30000,
+      "loss": 3.58
+    }
+  ],
+  "vram_breakdown_gb_estimate": {
+    "weights_bf16": 0.8,
+    "optimizer_states": 3.2,
+    "gradients": 0.8,
+    "activations": 35.0,
+    "overhead": 2.0,
+    "total": 42.0
+  },
+  "notes": [
+    "VRAM breakdown is a documented estimate, not a profiler measurement.",
+    "Parameter count recomputed from the `large` preset with vocabulary 151,643 and context 2048: 421.15M, matching the run's model card (421.1M); the '350M' monitor banner and '~333M' preset table were wrong.",
+    "The documented ~14 h wall clock is not consistent with 491M tokens at 20.7k tok/s (\u22486.6 h of compute); it includes evaluation, checkpointing and three documented incidents with restarts (network-filesystem checkpoint corruption, disk exhaustion, OOM on resume). Do not derive throughput from it.",
+    "The torch.compile comparison (~20.8k vs ~15k tok/s) is an observation from the monitor, not a controlled A/B run.",
+    "Loss values carry forward: token cross-entropy, AdamW with matrix-only decay, cosine schedule with warmup and bf16 autocast are unchanged. Throughput and generation speed were measured with the original implementation of the same architecture; Forgeline's model code has not been timed on an A40."
+  ],
+  "revalidation_required": false,
+  "ledger_status": {
+    "parameters_421M": "CARRY_FORWARD",
+    "best_val_loss": "CARRY_FORWARD",
+    "final_train_loss": "CARRY_FORWARD",
+    "tokens_processed": "CARRY_FORWARD",
+    "throughput": "CARRY_FORWARD_WITH_INTERPRETATION_NOTE",
+    "torch_compile_speedup": "CARRY_FORWARD_WITH_INTERPRETATION_NOTE",
+    "generation_tokens_per_second": "CARRY_FORWARD_WITH_INTERPRETATION_NOTE",
+    "loss_progression": "CARRY_FORWARD",
+    "wall_clock_14h": "CARRY_FORWARD_WITH_INTERPRETATION_NOTE",
+    "vram_breakdown": "DO_NOT_USE"
+  }
+}

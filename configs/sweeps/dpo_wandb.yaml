@@ -1,0 +1,11 @@
+# Weights & Biases Bayesian sweep over DPO hyper-parameters (requires the observability extra).
+#   wandb sweep configs/sweeps/dpo_wandb.yaml && wandb agent <sweep-id>
+program: scripts/run_sweep_trial.py
+method: bayes
+metric: {goal: minimize, name: eval/loss}
+parameters:
+  beta: {distribution: log_uniform_values, min: 0.01, max: 0.5}
+  learning_rate: {distribution: log_uniform_values, min: 1.0e-6, max: 1.0e-4}
+  max_steps: {values: [40, 80, 160]}
+  batch_size: {values: [2, 4]}
+command: [${env}, ${interpreter}, ${program}, --manifest, configs/post_training/dpo_tiny_cpu.yaml, ${args}]

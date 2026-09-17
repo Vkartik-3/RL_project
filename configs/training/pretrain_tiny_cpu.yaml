@@ -1,0 +1,21 @@
+name: pretrain-tiny-cpu
+algorithm: pretrain
+model_preset: tiny
+model:
+  block_size: 64
+  dropout: 0.0
+data:
+  kind: pretraining
+  path: data/prepared/tiny
+  tokenizer: auto
+trainer:
+  max_steps: 200
+  batch_size: 16
+  eval_every: 50
+  eval_batches: 10
+  log_every: 20
+  device: cpu
+  optimizer: {learning_rate: 1.0e-3, weight_decay: 0.1, grad_clip: 1.0}
+  schedule: {name: cosine, warmup_steps: 20, decay_steps: 200, min_lr: 1.0e-4}
+  checkpoint: {directory: checkpoints, save_every: 100, keep_last: 2}
+output_dir: runs/pretrain-tiny-cpu

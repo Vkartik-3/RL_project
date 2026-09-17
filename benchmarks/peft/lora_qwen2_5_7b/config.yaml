@@ -1,0 +1,12 @@
+backend: huggingface (HFPolicy)
+base_model: Qwen/Qwen2.5-7B-Instruct
+lora:
+  r: 8
+  alpha: 16
+  dropout: 0.05
+  target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+gradient_checkpointing: true

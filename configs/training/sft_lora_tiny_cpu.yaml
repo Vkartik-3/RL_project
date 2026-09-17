@@ -1,0 +1,17 @@
+# Parameter-efficient SFT: LoRA rank 4 on attention and FFN projections.
+name: sft-lora-tiny-cpu
+algorithm: sft
+model_preset: tiny
+model: {block_size: 64, dropout: 0.0}
+data: {kind: supervised, path: data/samples/supervised/arithmetic_sft.jsonl, tokenizer: char, max_length: 48}
+trainer:
+  max_steps: 50
+  batch_size: 8
+  eval_every: 25
+  log_every: 10
+  device: cpu
+  optimizer: {learning_rate: 2.0e-3, weight_decay: 0.0}
+  schedule: {name: constant, warmup_steps: 0}
+  adapter: {method: lora, rank: 4, alpha: 8.0, dropout: 0.0}
+  checkpoint: {directory: checkpoints, save_every: 0}
+output_dir: runs/sft-lora-tiny-cpu

@@ -1,0 +1,4 @@
+# ~10M-parameter character-level model (with a 65-symbol vocabulary) — trains on a laptop CPU.
+name: small
+algorithm: pretrain
+model_preset: small

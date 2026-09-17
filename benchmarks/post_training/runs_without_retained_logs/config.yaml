@@ -1,0 +1,3 @@
+grpo: configs/post_training/synthesis_grpo_qwen7b_lora.yaml
+rlaif: forgeline.training.rlaif.RLAIFTrainer
+star: forgeline.training.star.STaRTrainer

@@ -1,0 +1,1 @@
+distributed: {strategy: deepspeed, backend: nccl, deepspeed_config: configs/distributed/deepspeed_zero2.json}

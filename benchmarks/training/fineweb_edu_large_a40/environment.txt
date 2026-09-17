@@ -1,0 +1,1 @@
+Hardware: 1× NVIDIA A40 (46 GB), rented cloud instance. Driver / CUDA / PyTorch versions were not recorded.

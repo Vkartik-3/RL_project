@@ -1,0 +1,20 @@
+name: distill-tiny-cpu
+algorithm: distill
+model_preset: tiny
+model: {block_size: 64, dropout: 0.0, n_layer: 1}
+data: {kind: pretraining, path: data/prepared/tiny, tokenizer: auto}
+trainer:
+  max_steps: 50
+  batch_size: 8
+  eval_every: 25
+  log_every: 10
+  device: cpu
+  optimizer: {learning_rate: 1.0e-3, weight_decay: 0.01}
+  schedule: {name: constant, warmup_steps: 0}
+  checkpoint: {directory: checkpoints, save_every: 0}
+algorithm_params:
+  teacher_checkpoint: runs/pretrain-tiny-cpu/checkpoints/final
+  temperature: 4.0
+  alpha: 0.7
+  feature_weight: 0.0
+output_dir: runs/distill-tiny-cpu

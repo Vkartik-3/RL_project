@@ -25,13 +25,14 @@ The single reference for Forgeline: every subsystem, configuration option, comma
 19. [Observability](#19-observability)
 20. [Dashboard](#20-dashboard)
 21. [Synthesis domain](#21-synthesis-domain)
-22. [Testing](#22-testing)
-23. [Command-line reference](#23-command-line-reference)
-24. [Python API reference](#24-python-api-reference)
-25. [Benchmark results](#25-benchmark-results)
-26. [Troubleshooting](#26-troubleshooting)
-27. [Hardware requirements and limitations](#27-hardware-requirements-and-limitations)
-28. [Repository structure](#28-repository-structure)
+22. [Sequential decisioning: budgeted allocation](#22-sequential-decisioning-budgeted-allocation)
+23. [Testing](#23-testing)
+24. [Command-line reference](#24-command-line-reference)
+25. [Python API reference](#25-python-api-reference)
+26. [Benchmark results](#26-benchmark-results)
+27. [Troubleshooting](#27-troubleshooting)
+28. [Hardware requirements and limitations](#28-hardware-requirements-and-limitations)
+29. [Repository structure](#29-repository-structure)
 
 ## 1. Overview
 
@@ -71,6 +72,7 @@ It is designed to be verifiable without GPUs: a 0.1M-parameter preset exercises 
 | Evaluation | held-out loss/perplexity, verifier pass rate, malformed-output rate, agent accuracy and tool use, reward statistics, preference win rate, latency/throughput/memory, MMLU/HellaSwag/ARC/GSM8K/TruthfulQA/HumanEval, regression rules |
 | Inference & serving | continuous batching, paged block allocation, request lifecycle and cancellation, `/health`, `/v1/models`, `/v1/completions`, `/v1/chat/completions`, SSE streaming, `/metrics` |
 | Lifecycle | candidate registry (experimental → shadow → challenger → champion → retired), fail-closed promotion gates, feature flags, deterministic champion/challenger/shadow routing, offline replay, rollback, kill switch |
+| Sequential decisioning | budgeted allocation environment (finite horizon, hard budget, stochastic non-stationary opportunities, hidden policy-dependent pressure), heuristic and primal-dual pacing baselines, stateless and GRU sequence-conditioned PPO through the shared trainer, logged trajectories with propensities, OPE (IPS, SNIPS, PDIS, DR, bootstrap CIs, support diagnostics), hindsight oracle and regret, pacing metrics, simulated A/B with guardrails, shadow evaluation, promotion-gate integration |
 | Observability | structured logs, local JSONL metrics and events, W&B and TensorBoard sinks, spans, gradient norms, serving metrics; optional local dashboard over runs, checkpoints, evaluations, the registry, benchmark evidence and model internals (attention, activations, weights) |
 
 
@@ -1669,7 +1671,147 @@ CPU.
 * Outcomes of generated conditions are not simulated. The rule reward reads yield, selectivity, safety and steps from the record, and nested `outcomes` take precedence over any keys decoded from generated text, so for nested records the reward of a generated response equals the reward of the record it was prompted from. RL on this reward optimises nothing about the policy; a condition-aware outcome model is required before synthesis RL results can describe policy quality.
 
 
-## 22. Testing
+## 22. Sequential decisioning: budgeted allocation
+
+#### What
+
+A general finite-horizon, budget-constrained sequential allocation environment with policy-dependent dynamics, four
+policy families (static heuristic, online primal-dual pacer, stateless PPO, sequence-conditioned PPO), logged
+trajectories with valid propensities, offline policy evaluation (IPS, SNIPS, PDIS, DR), a hindsight oracle, pacing
+metrics, simulated A/B experiments with guardrails, shadow evaluation, and integration with the candidate registry and
+promotion gates. Package: `forgeline.domains.allocation`.
+
+#### Why
+
+Language-model post-training is one kind of sequential decision problem. This subsystem gives the same trainer,
+checkpoints, metrics and lifecycle a second, fully observable-by-construction task family where decisions are made
+under uncertainty about future opportunities, a hard resource constraint binds, and past actions change the future —
+the setting of resource allocation, bidding, scheduling, exposure control or compute pacing. It is a **simulator**;
+no real workload, traffic or budget data is involved.
+
+#### MDP
+
+| Element | Definition |
+|---|---|
+| Horizon | `T` decisions (default 48); fixed length, no early termination (a depleted budget forces zero spend) |
+| Budget | `B` (default 24 = half of `T·c̄`); hard: `x_t = min(m_t·ĉ_t, B_t)`, a clipped request is counted as a *violation* |
+| Opportunity `o_t = (v_t, c_t, q_t, s_t)` | `s_t = sin(2π(t+phase)/T)`; `v_t = v̄·exp(σ_v ε − σ_v²/2)(1 + A_v s_t)`; `c_t = c̄·exp(σ_c ε' − σ_c²/2)(1 + A_c s_t)`; `q_t ~ Beta(α, β)` — stochastic, seasonally non-stationary, exogenous |
+| Action | `a_t ∈ {abstain, low, medium, high}` → multiplier `m_t ∈ {0, 0.5, 1, 1.5}`, chosen before `o_{t+1}` is revealed |
+| Latent state | pressure `p_t ≥ 0`, `p_0 = 0` |
+| Effective cost | `ĉ_t = c_t (1 + κ p_t)` |
+| Intensity | `u_t = x_t / ĉ_t` (what was actually afforded) |
+| Response | `ρ_t = q_t · (1 − e^{−u_t}) · max(0, 1 − φ p_t)`; outcome `y_t ~ Bernoulli(ρ_t)` |
+| Reward | `r_t = y_t · v_t` (value realised); cost `x_t` |
+| Transitions | `B_{t+1} = B_t − x_t`; `p_{t+1} = δ p_t + η u_t` |
+| Observation (14-d) | remaining budget fraction, elapsed and remaining horizon fractions, `v_t/v̄−1`, `c_t/c̄−1`, `q_t`, `s_t`, pacing error `cum_spend/B − t/T`, cumulative value, last multiplier / reward / spend, mean relative value and cost of the last `k` opportunities. **Pressure is not observed** → POMDP |
+| Return | undiscounted sum of rewards (γ = 1 in PPO by default) |
+| Defaults | `δ = 0.85, η = 0.25, κ = 0.6, φ = 0.35, σ_v = 0.5, σ_c = 0.3, A_v = 0.4, A_c = −0.2, α = β = 2` (`configs/allocation/env_default.yaml`) |
+
+Policy-dependent dynamics: allocating intensity `u_t` today raises pressure, which multiplies every later effective
+cost by `(1 + κ p)` and every later response rate by `(1 − φ p)`. Under the same seed, an aggressive prefix and a
+cautious prefix lead to different costs and success probabilities for the identical later opportunities
+(`tests/unit/test_allocation_env.py::test_endogenous_feedback_changes_future_state_under_same_seed`); setting
+`pressure_gain: 0` makes the dynamics exogenous (tested).
+
+#### Baselines
+
+* **Static heuristic** `ThresholdPacingPolicy(threshold, level)` — allocate `level` when `v_t q_t / c_t ≥ threshold` and
+  cumulative spend ≤ pro-rata budget (+5% slack); otherwise abstain.
+* **Online primal-dual pacer** `DualPacingPolicy(learning_rate α, initial_price λ₀)` — per step chooses
+  `argmax_m [v_t q_t (1 − e^{−m}) − λ m c_t]`, then `λ ← max(0, λ + α (x_t − B/T))`: dual subgradient descent on the
+  budget-rate constraint. Budget pressure enters through λ: overspending raises the price and suppresses allocation.
+* **Stateless PPO** — `MLPActorCritic` (14 → 64 → 64 → {4 logits, value}) on the current observation.
+* **Sequence-conditioned PPO** — `GRUActorCritic`: a GRU (hidden 64) over the last `W = 8` steps of
+  `[obs_j, onehot(a_j), r_j/v̄, x_j/c̄, B_j/B]`, left-padded and masked, whose final state is concatenated with a
+  projection of the current observation before the actor/critic heads. It genuinely consumes the history window
+  (`test_gru_policy_consumes_history_window`: identical current observation, different histories → different action
+  distributions).
+
+PPO for both runs through the shared `Trainer` via `AllocationPPOAlgorithm` (`domains/allocation/ppo.py`): GAE
+(`compute_gae`), normalised advantages, `ppo_clipped_objective`, value MSE, entropy bonus; PPO epochs are trainer steps
+that reuse the same rollout with frozen old log-probs; `gradient_accumulation_steps` = minibatches. Manifest algorithm
+`allocation_ppo` (`configs/allocation/ppo_mlp.yaml`, `ppo_gru.yaml`, `ppo_tiny_cpu.yaml`).
+
+#### Logged trajectories
+
+`rollout.py::LoggedStep` (schema version 1): `episode_id, seed, t, obs, history_summary, action, propensity,
+action_probs, reward, cost, next_obs, cum_spend, cum_reward, remaining_budget, terminal, clipped, pressure` (pressure is
+logged for analysis only). `write_episodes`/`read_episodes` write JSONL and validate propensities (`0 < p ≤ 1`,
+`p == action_probs[action]`, proper distributions, terminated episodes). Behaviour data for OPE is produced by an
+`EpsilonMixPolicy` (`(1−ε)·base + ε·uniform`) so every action has propensity ≥ ε/4.
+
+#### Offline policy evaluation (`ope.py`)
+
+Trajectory IS (IPS), self-normalised IS (SNIPS), per-decision IS (PDIS) and per-decision doubly robust (DR, Q̂ from
+ridge regression of reward-to-go on `[obs, onehot(a)]`), each with percentile bootstrap CIs over episodes, plus clipped
+variants (`max_weight`). Diagnostics: ESS, max/mean weight, unsupported fraction (target mass where the behaviour policy
+had none → `OPEError`), zero-target fraction, clipped fraction, overlap. Non-finite weights raise. Formulas are checked
+against hand-computed values in `tests/unit/test_allocation_ope.py`.
+
+#### Oracle and regret
+
+`oracle.py::hindsight_upper_bound` solves the expected-value fractional knapsack over the whole revealed opportunity
+stream ignoring pressure (KKT: `u_t = clip(ln(v_t q_t/(λ c_t)), 0, u_max)`, λ by bisection). It is an **upper bound,
+not a policy**; regret is reported against it and against each baseline.
+
+#### Experiments (`experiment.py`)
+
+`run_ab_experiment`: episodes assigned to arms by `stable_bucket(salt:episode_seed)` (the routing hash), per-arm
+metrics, bootstrap CI of every metric difference, permutation test on value, minimum-sample warning, guardrails
+(primary CI, utilisation bounds, violations, early exhaustion, custom). `ABResult.gate_metrics()` feeds
+`PromotionGate` (`configs/allocation/promotion_gate.yaml`). `shadow_evaluate`: the candidate proposes at every step of
+the incumbent's episodes without acting; reports divergence rate (overall and by horizon third), an action confusion
+matrix, the candidate's replay value on the same seeds and its OPE estimate from the incumbent's log.
+
+#### Results (`benchmarks/decisioning/budgeted_allocation`)
+
+300 held-out episodes, 5 training seeds, laptop CPU, 3 minutes total:
+
+| Policy | Value | Utilisation | Pacing error | Early exhaustion | Regret vs oracle (13.22) |
+|---|---|---|---|---|---|
+| threshold heuristic | 7.29 | 0.70 | 0.178 | 0.00 | 5.93 |
+| dual pacer | **7.71** | 0.92 | 0.082 | 0.00 | 5.51 |
+| stateless PPO | 7.40 ± 0.10 | 0.87 | 0.153 | 0.05 | 5.82 |
+| sequence PPO (GRU) | 7.60 ± 0.12 | 0.95 | 0.091 | 0.20 | 5.62 |
+
+History helps (+0.19 over stateless PPO, consistent across seeds), but the online dual pacer remains the best policy
+at this training budget; the simulated A/B (dual vs best GRU, 400 episodes) measured Δ = +0.57 with CI [−0.04, +1.16],
+p = 0.084, and more clipped-budget attempts, so the gate rejected the challenger. OPE: DR estimates lie within
+0.1–0.9 of simulator truth for all targets; IPS collapses for targets far from the behaviour policy (ESS ≈ 0).
+Throughput: ~50k env steps/s, ~300 OPE trajectory-evaluations/s, ~500 A/B episodes/s.
+
+#### Commands
+
+```bash
+forgeline allocation benchmark --config configs/allocation/benchmark.yaml        # full benchmark (~3 min)
+forgeline allocation benchmark --config configs/allocation/benchmark_tiny_cpu.yaml
+forgeline train configs/allocation/ppo_gru.yaml                                   # one policy through the trainer
+forgeline allocation ope --log runs/allocation-benchmark/logged_trajectories.jsonl --target <checkpoint>|dual|threshold
+forgeline allocation ab --incumbent dual --challenger <checkpoint> --episodes 400 --gate-metrics gate.json
+forgeline registry register --name allocator --version v2 --algorithm allocation_ppo --checkpoint <checkpoint> --metrics "$(cat gate.json)"
+forgeline registry promote --id <id> --to champion --gate configs/allocation/promotion_gate.yaml
+forgeline allocation shadow --incumbent dual --candidate <checkpoint>
+```
+
+#### Failure modes
+
+`ConfigError` for invalid env/policy/PPO/A/B configuration and invalid actions; `DatasetError` for malformed logs or
+propensities; `OPEError` for unsupported targets, zero propensities, non-finite weights; deterministic incumbents make
+OPE impossible in shadow mode and the report says so.
+
+#### Local validation
+
+`tests/unit/test_allocation_env.py` (10), `tests/unit/test_allocation_ope.py` (7), `tests/integration/test_allocation_pipeline.py` (13).
+
+#### Limitations
+
+* Simulator only; opportunity and response models are synthetic and the pressure feedback is a stylised monotone effect.
+* PPO was trained for a fixed small budget (9,600 episodes per policy per seed); the ordering against the dual pacer may change with more training or tuning, which was deliberately not done.
+* Trajectory-level importance sampling is unusable at horizon 48 for dissimilar policies; rely on DR/PDIS and the diagnostics.
+* Multi-seed evaluation uses common seeds across policies; results are means over 300 episodes, not a statistical proof of superiority.
+
+
+## 23. Testing
 
 #### What
 
@@ -1728,18 +1870,18 @@ CPU for the default suite.
 Multi-GPU behaviour is only exercised when `tests/hardware` is run on GPUs.
 
 
-## 23. Command-line reference
+## 24. Command-line reference
 
 ```text
 usage: forgeline [-h] [--version]
-                 {presets,validate,data,train,generate,evaluate,serve,export,registry,rlaif,dashboard,synthesis-ppo}
+                 {presets,validate,data,train,generate,evaluate,serve,export,registry,rlaif,dashboard,allocation,synthesis-ppo}
                  ...
 
 Forgeline — post-training, distributed training, evaluation, inference and
 model lifecycle for language models.
 
 positional arguments:
-  {presets,validate,data,train,generate,evaluate,serve,export,registry,rlaif,dashboard,synthesis-ppo}
+  {presets,validate,data,train,generate,evaluate,serve,export,registry,rlaif,dashboard,allocation,synthesis-ppo}
     presets             list model presets
     validate            validate an experiment manifest without running it
     data                dataset preparation and validation
@@ -1749,6 +1891,8 @@ positional arguments:
     rlaif               AI-feedback data generation
     dashboard           local read-only dashboard: runs, checkpoints,
                         evaluations, registry, benchmarks, model inspection
+    allocation          budgeted sequential-allocation benchmark: benchmark,
+                        OPE, simulated A/B, shadow
     synthesis-ppo       tabular actor-critic PPO on synthesis trajectories
 
 options:
@@ -2146,6 +2290,94 @@ options:
   --export EXPORT       write a JSON snapshot instead of serving
 ```
 
+#### `forgeline allocation`
+
+```text
+usage: forgeline allocation [-h] {benchmark,ope,ab,shadow} ...
+
+positional arguments:
+  {benchmark,ope,ab,shadow}
+    benchmark           train + evaluate heuristic, dual pacer, stateless PPO,
+                        sequence PPO; OPE; A/B; shadow
+
+options:
+  -h, --help            show this help message and exit
+```
+
+#### `forgeline allocation benchmark`
+
+```text
+usage: forgeline allocation benchmark [-h] --config CONFIG
+                                      [--output-dir OUTPUT_DIR]
+
+options:
+  -h, --help            show this help message and exit
+  --config CONFIG
+  --output-dir OUTPUT_DIR
+```
+
+#### `forgeline allocation ope`
+
+```text
+usage: forgeline allocation ope [-h] [--env ENV] [--metrics METRICS]
+                                [--output-dir OUTPUT_DIR] --log LOG --target
+                                TARGET [--max-weight MAX_WEIGHT]
+                                [--bootstrap BOOTSTRAP]
+
+options:
+  -h, --help            show this help message and exit
+  --env ENV             env YAML (defaults otherwise)
+  --metrics METRICS
+  --output-dir OUTPUT_DIR
+  --log LOG             logged trajectories JSONL
+  --target TARGET       checkpoint dir | dual | threshold
+  --max-weight MAX_WEIGHT
+  --bootstrap BOOTSTRAP
+```
+
+#### `forgeline allocation ab`
+
+```text
+usage: forgeline allocation ab [-h] [--env ENV] [--metrics METRICS]
+                               [--output-dir OUTPUT_DIR] --incumbent INCUMBENT
+                               --challenger CHALLENGER [--episodes EPISODES]
+                               [--seed SEED]
+                               [--challenger-percent CHALLENGER_PERCENT]
+                               [--gate-metrics GATE_METRICS]
+
+options:
+  -h, --help            show this help message and exit
+  --env ENV             env YAML (defaults otherwise)
+  --metrics METRICS
+  --output-dir OUTPUT_DIR
+  --incumbent INCUMBENT
+  --challenger CHALLENGER
+  --episodes EPISODES
+  --seed SEED
+  --challenger-percent CHALLENGER_PERCENT
+  --gate-metrics GATE_METRICS
+                        write PromotionGate metrics JSON
+```
+
+#### `forgeline allocation shadow`
+
+```text
+usage: forgeline allocation shadow [-h] [--env ENV] [--metrics METRICS]
+                                   [--output-dir OUTPUT_DIR] --incumbent
+                                   INCUMBENT --candidate CANDIDATE
+                                   [--episodes EPISODES] [--seed SEED]
+
+options:
+  -h, --help            show this help message and exit
+  --env ENV             env YAML (defaults otherwise)
+  --metrics METRICS
+  --output-dir OUTPUT_DIR
+  --incumbent INCUMBENT
+  --candidate CANDIDATE
+  --episodes EPISODES
+  --seed SEED
+```
+
 #### `forgeline synthesis-ppo`
 
 ```text
@@ -2163,7 +2395,7 @@ options:
 ```
 
 
-## 24. Python API reference
+## 25. Python API reference
 
 | Import | Purpose |
 |---|---|
@@ -2189,6 +2421,7 @@ options:
 | `from forgeline.dashboard import DashboardSources, snapshot, discover_runs, run_detail, inspect_checkpoint` | optional dashboard data layer |
 | `from forgeline.evaluation.inspection import attention_patterns, activation_flow, weight_statistics, layer_summary` | model inspection |
 | `from forgeline.domains.synthesis import SynthesisRuleReward, TabularPPOTrainer, build_preference_pairs` | synthesis domain |
+| `from forgeline.domains.allocation import BudgetedAllocationEnv, AllocationEnvConfig, DualPacingPolicy, ThresholdPacingPolicy, NeuralPolicy, AllocationPPOAlgorithm, load_allocation_policy, run_episodes, evaluate_target_policy, run_ab_experiment, shadow_evaluate, oracle_values` | sequential decisioning |
 
 ### Minimal Python training loop
 
@@ -2244,7 +2477,7 @@ reward = CompositeReward([(VerifierReward(JSONKeyVerifier(), target_key="key"), 
 ```
 
 
-## 25. Benchmark results
+## 26. Benchmark results
 
 Structured records of measurements. Each directory holds `results.json` (numbers + evidence level), `config.yaml` (the configuration that produced them), `environment.txt` (what is known about the hardware) and `summary.md`.
 
@@ -2280,6 +2513,7 @@ Every record also carries `ledger_status`, one status per reported number:
 | Hill climb | rlvr/hill_climb_gsm8k | accuracy 0.125 → 0.0 | raw_log | carry forward with note (negative result) |
 | Tabular PPO | post_training/tabular_ppo_synthesis | record statistics; leave-one-molecule-out record means | raw_log | carry forward with note |
 | AI feedback data | post_training/ai_feedback_data | 60 pairwise DPO pairs; 10 constitutional revisions | raw_log | carry forward (reproduced) |
+| Sequential decisioning | decisioning/budgeted_allocation | dual pacer 7.71, sequence PPO 7.60 ± 0.12, stateless PPO 7.40 ± 0.10, heuristic 7.29 (oracle 13.22); DR OPE within 0.1–0.9 of truth; A/B rejected | raw_log | carry forward |
 | — | post_training/runs_without_retained_logs | GRPO 0.823, RLAIF 0.814, STaR 0.791, SFT 0.412 | documented_without_raw_log | needs evidence recovery |
 
 ### Normalisation differences
@@ -2293,6 +2527,37 @@ Forgeline keeps each recorded objective but normalises losses as means over grou
 | Process-reward GRPO (B problems × G=4) | Σ_problems Σ_g −A·∇Σ_t log π (no normalisation) | mean over groups of Σ_g | B |
 
 With a constant ratio and gradient norms mostly above the clip threshold, the updates are identical up to `eps`; when norms straddle the threshold the two runs clip on different steps. The process-reward run also recomputed log-probs by re-tokenising decoded text, while Forgeline uses the generated token ids. These records are therefore marked `revalidation_recommended`, not `revalidation_required`.
+
+
+### `decisioning/budgeted_allocation`
+
+
+Environment: horizon 48, budget 24.0, 300 held-out episodes per policy, 5 training seeds for PPO. Oracle (hindsight upper bound) mean value 13.219.
+
+| Policy | Value (mean ± seed std) | Utilisation | Pacing error | Early exhaustion | Violations | Regret vs oracle | Regret vs dual pacer |
+|---|---|---|---|---|---|---|---|
+| threshold_pacing | 7.292 ± 0.000 | 0.700 | 0.178 | 0.000 | 0.02 | 5.927 | +0.415 |
+| dual_pacing | 7.707 ± 0.000 | 0.920 | 0.082 | 0.000 | 0.03 | 5.512 | +0.000 |
+| ppo_mlp | 7.402 ± 0.098 | 0.873 | 0.153 | 0.045 | 0.60 | 5.818 | +0.306 |
+| ppo_gru | 7.595 ± 0.115 | 0.948 | 0.091 | 0.198 | 1.82 | 5.624 | +0.112 |
+
+#### Offline policy evaluation (behaviour: ppo_mlp_eps0.2, 300 logged episodes)
+
+| Target | Truth | IPS | SNIPS | PDIS | DR | DR clipped | ESS | max weight | warnings |
+|---|---|---|---|---|---|---|---|---|---|
+| ppo_mlp_best | 7.566 | 5.235 [0.99, 12.11] | 8.536 [5.44, 10.36] | 5.958 [3.76, 8.77] | 7.671 [6.49, 9.15] | 7.474 [6.62, 8.30] | 4.4 | 74.6 | 2 |
+| ppo_gru_best | 7.742 | 0.257 [0.07, 0.47] | 5.535 [4.18, 8.13] | 2.374 [1.73, 3.08] | 6.817 [6.35, 7.20] | 6.928 [6.60, 7.25] | 5.2 | 4.6 | 2 |
+| dual_pacing | 7.697 | 0.000 [0.00, 0.00] | — | 1.784 [0.62, 3.34] | 6.917 [6.27, 7.65] | 6.742 [6.37, 7.14] | 0.0 | 0.0 | 4 |
+| threshold_pacing | 7.138 | 0.000 [0.00, 0.00] | — | 0.603 [0.37, 0.92] | 6.677 [6.36, 6.95] | 6.747 [6.53, 6.99] | 0.0 | 0.0 | 3 |
+| behaviour_itself | 6.927 | 6.802 [6.49, 7.13] | 6.802 [6.49, 7.13] | 6.802 [6.49, 7.13] | 6.828 [6.51, 7.16] | 6.828 [6.51, 7.16] | 300.0 | 1.0 | 0 |
+
+#### Simulated A/B: dual_pacing (n=197) vs ppo_gru (n=203)
+
+Δvalue +0.567 (95% bootstrap CI [-0.041, +1.157]), permutation p = 0.084; guardrail failures: ['primary metric CI lower bound -0.0405 < -0.0', 'violations increased by 1.029 > 0.5']; decision: reject.
+
+#### Shadow: divergence rate 0.398 (by horizon third [0.381, 0.378, 0.435]); incumbent value 7.656, candidate replay value 8.066
+
+Throughput: evaluation 50886 env steps/s; OPE 297 trajectory-evaluations/s; A/B 518 episodes/s; PPO training ppo_mlp 8s/seed, ppo_gru 26s/seed. Total 179s.
 
 
 ### `distributed`
@@ -2468,7 +2733,7 @@ Loss: 12.12 (step 0) → 5.44 (1k) → 4.65 (3k) → 4.30 (5k) → 4.00 (10k) �
 Status: applicable — the forward pass, loss, optimizer grouping, schedule and bf16 autocast are unchanged. No revalidation required.
 
 
-## 26. Troubleshooting
+## 27. Troubleshooting
 
 | Symptom | Cause | Fix |
 |---|---|---|
@@ -2487,7 +2752,7 @@ Status: applicable — the forward pass, loss, optimizer grouping, schedule and 
 | all GRPO/DAPO groups skipped | every sample in each group got the same reward | raise `temperature`, increase `group_size`, or use a denser reward |
 
 
-## 27. Hardware requirements and limitations
+## 28. Hardware requirements and limitations
 
 | Workload | Minimum |
 |---|---|
@@ -2513,7 +2778,7 @@ No FP8-capable hardware is required for any feature.
 * In the synthesis task the rule reward depends only on the dataset record, so policy-quality claims there need a condition-aware reward.
 
 
-## 28. Repository structure
+## 29. Repository structure
 
 ```
 forgeline/
@@ -2534,8 +2799,9 @@ forgeline/
 │   ├── orchestration/   optional Ray worker pools
 │   ├── dashboard/       optional read-only dashboard
 │   ├── domains/synthesis/
+│   ├── domains/allocation/   env, policies, ppo, rollout, ope, oracle, experiment, benchmark
 │   └── cli/
-├── configs/             models, training, post_training, distributed, inference, evaluation, deployment, sweeps
+├── configs/             models, training, post_training, allocation, distributed, orchestration, inference, evaluation, deployment, sweeps
 ├── data/samples/        text, supervised, preference, verifiable, synthesis
 ├── examples/            runnable end-to-end scripts
 ├── scripts/             local validation, synthetic data generation, sweep trial

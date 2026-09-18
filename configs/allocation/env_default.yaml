@@ -1,0 +1,17 @@
+# BudgetedAllocationEnv parameters used by the benchmark (see docs/decisioning.md for the MDP).
+horizon: 48
+budget: 24.0
+value_mean: 1.0
+value_sigma: 0.5
+cost_mean: 1.0
+cost_sigma: 0.3
+quality_alpha: 2.0
+quality_beta: 2.0
+season_amplitude_value: 0.4
+season_amplitude_cost: -0.2
+random_phase: true
+pressure_decay: 0.85
+pressure_gain: 0.25
+pressure_cost_coef: 0.6
+pressure_response_coef: 0.35
+history_window: 4

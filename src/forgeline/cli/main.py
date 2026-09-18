@@ -418,6 +418,71 @@ def cmd_dashboard(args: argparse.Namespace) -> int:
     return 0
 
 
+def _load_alloc_policy(spec: str, env_cfg):
+    """``mlp:<checkpoint>`` / ``gru:<checkpoint>`` / ``<checkpoint>`` load a trained policy; ``dual`` / ``threshold`` build baselines."""
+    from forgeline.domains.allocation.policies import DualPacingPolicy, ThresholdPacingPolicy
+    from forgeline.domains.allocation.ppo import load_allocation_policy
+
+    if spec == "dual":
+        return DualPacingPolicy(env_cfg)
+    if spec == "threshold":
+        return ThresholdPacingPolicy(env_cfg, threshold=0.6)
+    return load_allocation_policy(spec.split(":", 1)[-1])
+
+
+def cmd_allocation(args: argparse.Namespace) -> int:
+    from forgeline.core.config import load_config
+    from forgeline.domains.allocation.env import AllocationEnvConfig
+    from forgeline.observability.events import Event
+    from forgeline.observability.metrics import build_metrics_sink
+
+    if args.allocation_cmd == "benchmark":
+        from forgeline.domains.allocation.benchmark import BenchmarkConfig, run_benchmark
+
+        cfg = BenchmarkConfig.from_dict(dict(load_config(args.config)))
+        if args.output_dir:
+            cfg.output_dir = args.output_dir
+        results = run_benchmark(cfg)
+        print(Path(cfg.output_dir, "summary.md").read_text())
+        print(f"results: {Path(cfg.output_dir, 'results.json')}")
+        return 0
+    env_cfg = AllocationEnvConfig.from_dict(dict(load_config(args.env)) if args.env else {})
+    sink = build_metrics_sink(args.metrics, output_dir=args.output_dir, run_name=f"allocation-{args.allocation_cmd}")
+    if args.allocation_cmd == "ope":
+        from forgeline.domains.allocation.ope import OPEConfig, evaluate_target_policy
+        from forgeline.domains.allocation.rollout import read_episodes
+
+        episodes = read_episodes(args.log)
+        target = _load_alloc_policy(args.target, env_cfg)
+        report = evaluate_target_policy(target, episodes, env_cfg, OPEConfig(max_weight=args.max_weight, n_bootstrap=args.bootstrap), target_name=args.target)
+        d = report.to_dict()
+        sink.event(Event.OPE_EVALUATED.value, {"target": args.target, **{f"{k}": v["value"] for k, v in d["estimates"].items()}, "ess": d["diagnostics"]["ess"]})
+        _print(d)
+        return 0 if not d["diagnostics"]["warnings"] else 3
+    if args.allocation_cmd == "ab":
+        from forgeline.domains.allocation.experiment import ABConfig, run_ab_experiment
+
+        res = run_ab_experiment(_load_alloc_policy(args.incumbent, env_cfg), _load_alloc_policy(args.challenger, env_cfg), env_cfg,
+                                ABConfig(n_episodes=args.episodes, seed=args.seed, challenger_percent=args.challenger_percent),
+                                incumbent_name=args.incumbent, challenger_name=args.challenger)
+        d = res.to_dict()
+        sink.event(Event.EXPERIMENT_AB.value, {"promote": res.promote, "p_value": res.p_value, **res.gate_metrics()})
+        _print(d)
+        if args.gate_metrics:
+            Path(args.gate_metrics).write_text(json.dumps(res.gate_metrics(), indent=2))
+        return 0 if res.promote else 2
+    if args.allocation_cmd == "shadow":
+        from forgeline.domains.allocation.experiment import shadow_evaluate
+        from forgeline.domains.allocation.rollout import seeds_for
+
+        res = shadow_evaluate(_load_alloc_policy(args.incumbent, env_cfg), _load_alloc_policy(args.candidate, env_cfg), env_cfg,
+                              seeds_for(args.seed, args.episodes))
+        sink.event(Event.EXPERIMENT_SHADOW.value, {"divergence_rate": res.divergence_rate, "candidate_replay_value": res.candidate_replay_value})
+        _print(res.to_dict())
+        return 0
+    raise ForgelineError(f"unknown allocation command {args.allocation_cmd}")
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="forgeline", description="Forgeline — post-training, distributed training, evaluation, inference and model lifecycle for language models.")
     p.add_argument("--version", action="version", version=f"forgeline {__version__}")
@@ -490,6 +555,20 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--runs", nargs="+", default=["runs"], help="directories searched for run outputs"); s.add_argument("--registry", default="registry/candidates.json")
     s.add_argument("--benchmarks", default="benchmarks"); s.add_argument("--host", default="127.0.0.1"); s.add_argument("--port", type=int, default=8765)
     s.add_argument("--export", default=None, help="write a JSON snapshot instead of serving"); s.set_defaults(func=cmd_dashboard)
+
+    al = sub.add_parser("allocation", help="budgeted sequential-allocation benchmark: benchmark, OPE, simulated A/B, shadow"); als = al.add_subparsers(dest="allocation_cmd", required=True)
+    x = als.add_parser("benchmark", help="train + evaluate heuristic, dual pacer, stateless PPO, sequence PPO; OPE; A/B; shadow"); x.add_argument("--config", required=True); x.add_argument("--output-dir", default=None)
+    for name in ("ope", "ab", "shadow"):
+        x = als.add_parser(name); x.add_argument("--env", default=None, help="env YAML (defaults otherwise)"); x.add_argument("--metrics", default="none"); x.add_argument("--output-dir", default="runs/allocation")
+        if name == "ope":
+            x.add_argument("--log", required=True, help="logged trajectories JSONL"); x.add_argument("--target", required=True, help="checkpoint dir | dual | threshold")
+            x.add_argument("--max-weight", type=float, default=20.0); x.add_argument("--bootstrap", type=int, default=500)
+        elif name == "ab":
+            x.add_argument("--incumbent", required=True); x.add_argument("--challenger", required=True); x.add_argument("--episodes", type=int, default=400)
+            x.add_argument("--seed", type=int, default=0); x.add_argument("--challenger-percent", type=float, default=50.0); x.add_argument("--gate-metrics", default=None, help="write PromotionGate metrics JSON")
+        else:
+            x.add_argument("--incumbent", required=True); x.add_argument("--candidate", required=True); x.add_argument("--episodes", type=int, default=100); x.add_argument("--seed", type=int, default=0)
+    al.set_defaults(func=cmd_allocation)
 
     s = sub.add_parser("synthesis-ppo", help="tabular actor-critic PPO on synthesis trajectories")
     s.add_argument("--data", required=True); s.add_argument("--epochs", type=int, default=5); s.add_argument("--batch-size", type=int, default=8); s.add_argument("--lr", type=float, default=1e-4)

@@ -1,0 +1,22 @@
+# Full CPU benchmark: 5 training seeds × (stateless PPO, sequence PPO) + heuristic + dual pacer, 300 held-out episodes,
+# OPE against simulator truth, simulated A/B (400 episodes) and shadow evaluation. ~3-4 min on a laptop CPU.
+env: {horizon: 48, budget: 24.0}
+training_seeds: [0, 1, 2, 3, 4]
+eval_episodes: 300
+eval_seed: 20000
+trainer_steps: 1200
+episodes_per_rollout: 32
+ppo_epochs: 4
+learning_rate: 0.003
+hidden: 64
+window: 8
+heuristic_threshold: 0.6
+dual_learning_rate: 0.2
+dual_initial_price: 0.8
+ope_log_episodes: 300
+ope_epsilon: 0.2
+ope_max_weight: 20.0
+ab_episodes: 400
+shadow_episodes: 100
+output_dir: runs/allocation-benchmark
+metrics: local

@@ -40,6 +40,7 @@ It is designed to be verifiable without GPUs: a 0.1M-parameter preset exercises 
 | Evaluation | held-out loss/perplexity, verifier pass rate, malformed-output rate, agent accuracy and tool use, reward statistics, preference win rate, latency/throughput/memory, MMLU/HellaSwag/ARC/GSM8K/TruthfulQA/HumanEval, regression rules |
 | Inference & serving | continuous batching, paged block allocation, request lifecycle and cancellation, `/health`, `/v1/models`, `/v1/completions`, `/v1/chat/completions`, SSE streaming, `/metrics` |
 | Lifecycle | candidate registry (experimental → shadow → challenger → champion → retired), fail-closed promotion gates, feature flags, deterministic champion/challenger/shadow routing, offline replay, rollback, kill switch |
+| Sequential decisioning | budgeted allocation environment (finite horizon, hard budget, stochastic non-stationary opportunities, hidden policy-dependent pressure), heuristic and primal-dual pacing baselines, stateless and GRU sequence-conditioned PPO through the shared trainer, logged trajectories with propensities, OPE (IPS, SNIPS, PDIS, DR, bootstrap CIs, support diagnostics), hindsight oracle and regret, pacing metrics, simulated A/B with guardrails, shadow evaluation, promotion-gate integration |
 | Observability | structured logs, local JSONL metrics and events, W&B and TensorBoard sinks, spans, gradient norms, serving metrics; optional local dashboard over runs, checkpoints, evaluations, the registry, benchmark evidence and model internals (attention, activations, weights) |
 
 ## Architecture
@@ -84,6 +85,7 @@ flowchart TB
 | `forgeline.orchestration` | optional Ray worker pools (rollout, reward, tool, evaluation) |
 | `forgeline.dashboard` | optional read-only dashboard (data layer, HTTP server, single-page UI) |
 | `forgeline.domains.synthesis` | synthesis-condition optimisation task family |
+| `forgeline.domains.allocation` | budgeted sequential-allocation environment, baselines, PPO policies, OPE, oracle, A/B and shadow experiments |
 | `forgeline.cli` | the `forgeline` command |
 
 Details: [docs/architecture.md](docs/architecture.md). Complete reference in one document: [docs/GUIDE.md](docs/GUIDE.md). Engineering and evidence dossier (every subsystem, benchmark provenance, validation boundaries): [FORGELINE_COMPLETE_ENGINEERING_DOSSIER.md](FORGELINE_COMPLETE_ENGINEERING_DOSSIER.md).
@@ -166,6 +168,16 @@ Verifiers replace learned rewards: math answers, exact match, tagged final answe
 | Hill climbing | rejection-sample high-reward tool trajectories into the dataset, then agent GRPO rounds |
 
 [docs/post_training.md](docs/post_training.md) · [docs/rlhf.md](docs/rlhf.md)
+
+## Sequential Decisioning Benchmark
+
+A general budgeted allocation problem: `T` opportunities arrive with uncertain value, cost and quality; the policy picks an allocation intensity before seeing the future; a hidden *pressure* state driven by past allocations raises later costs and lowers later response rates. Policies: threshold heuristic, online primal-dual pacer, stateless PPO and GRU sequence-conditioned PPO (both via the shared trainer). Logged trajectories carry propensities; `IPS/SNIPS/PDIS/DR` offline evaluation with bootstrap CIs and support diagnostics; a hindsight oracle bounds regret; simulated A/B experiments (deterministic assignment, bootstrap CI, permutation test, guardrails) feed the promotion gate; shadow evaluation measures divergence.
+
+```bash
+forgeline allocation benchmark --config configs/allocation/benchmark.yaml     # heuristic vs pacer vs PPO vs sequence PPO, OPE, A/B, shadow (~3 min CPU)
+```
+
+Measured (5 seeds, 300 held-out episodes): dual pacer 7.71, sequence PPO 7.60 ± 0.12, stateless PPO 7.40 ± 0.10, heuristic 7.29, oracle bound 13.22; the A/B gate rejected the sequence-PPO challenger (Δ +0.57, CI [−0.04, +1.16]). Simulator only. [docs/decisioning.md](docs/decisioning.md)
 
 ## Distributed Training
 
@@ -322,6 +334,7 @@ One manifest per run (YAML, TOML or JSON): model preset and overrides, checkpoin
 | `examples/03_agent_tool_rollout.py` | multi-turn tool episode, result injection, verifiable scoring |
 | `examples/04_serve_local.py` | local OpenAI-compatible server |
 | `examples/05_synthesis_generalization.py` | leave-one-molecule-out evaluation in the synthesis domain |
+| `examples/06_allocation_lifecycle.py` | train a sequence policy, OPE, simulated A/B, gated registration, rollback |
 
 Manifests for every stage live in `configs/`.
 
@@ -335,8 +348,8 @@ torchrun --nproc_per_node=2 -m pytest tests/hardware -m multi_gpu
 
 | Suite | Covers |
 |---|---|
-| `tests/unit` | configs, data, models, adapters, quantization, training math, rollouts, verifiers, checkpoints, distributed planning, evaluation, deployment, inference, serving, observability, CLI, synthesis domain, benchmark semantics |
-| `tests/integration` | every training stage, exact resume, `torch.compile` equivalence, adapter merge on save, CLI pipeline with a live HTTP server, two-process data parallelism, gloo tensor/pipeline execution, HuggingFace backend on a tiny local model, Ray worker pools (weight sync, worker replacement, placement, sharded evaluation, GRPO via Ray), dashboard API |
+| `tests/unit` | allocation environment and OPE formulas, configs, data, models, adapters, quantization, training math, rollouts, verifiers, checkpoints, distributed planning, evaluation, deployment, inference, serving, observability, CLI, synthesis domain, benchmark semantics |
+| `tests/integration` | every training stage, exact resume, `torch.compile` equivalence, adapter merge on save, CLI pipeline with a live HTTP server, two-process data parallelism, gloo tensor/pipeline execution, HuggingFace backend on a tiny local model, Ray worker pools (weight sync, worker replacement, placement, sharded evaluation, GRPO via Ray), dashboard API, allocation baselines / PPO / OPE / A/B / shadow / lifecycle / CLI |
 | `tests/failure` | missing/corrupt/mismatched checkpoints, malformed data, invalid rewards, verifier and tool failures, rollout failures, distributed misconfiguration, promotion rejection, serving failures, export errors, non-finite loss |
 | `tests/smoke` | every module imports, public API |
 | `tests/hardware` | CUDA precision and inference, FSDP and tensor parallel under torchrun, DeepSpeed, Ray rollout workers on GPUs (marked `cuda` / `multi_gpu` / `distributed`) |
@@ -370,6 +383,17 @@ FineWeb-Edu loss: 12.12 → 5.44 (1k) → 4.65 (3k) → 4.30 (5k) → 4.00 (10k)
 
 On the synthesis task, scoring the 100 held-out dataset records (all Ketoprofen: the split is the last 20% of a molecule-ordered file) with the rule reward gives 0.8080 ± 0.0151 (100/100 above 0.75). That number describes the dataset, not a trained policy, and is identical for every method. The rule reward reads yield, selectivity, safety and steps from the record, which generated conditions do not change, so the PPO training rewards above also track which records were sampled rather than policy quality: sampling four random training records per iteration reproduces the logged reward mean (0.848 vs 0.850) and a best-of-200 batch mean of 0.90. The run demonstrates a working 7B LoRA PPO pipeline, not a policy improvement.
 
+### Sequential decisioning (CPU)
+
+| Policy | Held-out value (300 episodes) | Utilisation | Pacing error |
+|---|---|---|---|
+| Threshold heuristic | 7.29 | 0.70 | 0.178 |
+| Online dual pacer | **7.71** | 0.92 | 0.082 |
+| Stateless PPO (5 seeds) | 7.40 ± 0.10 | 0.87 | 0.153 |
+| GRU sequence PPO (5 seeds) | 7.60 ± 0.12 | 0.95 | 0.091 |
+
+Hindsight oracle bound 13.22. DR offline estimates within 0.1–0.9 of simulator truth; IPS unusable at horizon 48 for dissimilar policies. Simulated A/B rejected the challenger. Record: `benchmarks/decisioning/budgeted_allocation`.
+
 ### Synthesis domain (CPU)
 
 | Run | Result |
@@ -402,8 +426,9 @@ forgeline/
 │   ├── orchestration/   optional Ray worker pools
 │   ├── dashboard/       optional read-only dashboard
 │   ├── domains/synthesis/
+│   ├── domains/allocation/   env, policies, ppo, rollout, ope, oracle, experiment, benchmark
 │   └── cli/
-├── configs/             models, training, post_training, distributed, inference, evaluation, deployment, sweeps
+├── configs/             models, training, post_training, allocation, distributed, orchestration, inference, evaluation, deployment, sweeps
 ├── data/samples/        text, supervised, preference, verifiable, synthesis
 ├── examples/            runnable end-to-end scripts
 ├── scripts/             local validation, synthetic data generation, sweep trial
@@ -442,3 +467,4 @@ No FP8-capable hardware is required for any feature.
 ## License
 
 MIT — see [LICENSE](LICENSE).
+

@@ -1,0 +1,396 @@
+{
+ "evidence": "raw_log",
+ "measured_on": "Apple Silicon laptop CPU, torch 2.14.0, Python 3.12.13",
+ "command": "forgeline allocation benchmark --config configs/allocation/benchmark.yaml",
+ "environment": {
+  "horizon": 48,
+  "budget": 24.0,
+  "value_mean": 1.0,
+  "value_sigma": 0.5,
+  "cost_mean": 1.0,
+  "cost_sigma": 0.3,
+  "quality_alpha": 2.0,
+  "quality_beta": 2.0,
+  "season_amplitude_value": 0.4,
+  "season_amplitude_cost": -0.2,
+  "random_phase": true,
+  "pressure_decay": 0.85,
+  "pressure_gain": 0.25,
+  "pressure_cost_coef": 0.6,
+  "pressure_response_coef": 0.35,
+  "history_window": 4,
+  "multipliers": [
+   0.0,
+   0.5,
+   1.0,
+   1.5
+  ]
+ },
+ "oracle_mean_value": 13.21932953825068,
+ "policies": {
+  "threshold_pacing": {
+   "value": 7.292217547232637,
+   "value_seed_std": 0.0,
+   "utilization": 0.6999059224786276,
+   "utilization_seed_std": 0.0,
+   "pacing_error": 0.17845338392939514,
+   "pacing_error_seed_std": 0.0,
+   "early_exhaustion": 0.0,
+   "early_exhaustion_seed_std": 0.0,
+   "violations": 0.02,
+   "violations_seed_std": 0.0,
+   "regret_vs_oracle": 5.927111991018044,
+   "regret_vs_oracle_seed_std": 0.0,
+   "value_per_budget": 0.3038423978013599,
+   "value_per_budget_seed_std": 0.0,
+   "unused_budget_frac": 0.30009407752137246,
+   "unused_budget_frac_seed_std": 0.0,
+   "n_seeds": 1,
+   "regret_vs_threshold": 0.0,
+   "regret_vs_dual": 0.41511192093427596
+  },
+  "dual_pacing": {
+   "value": 7.707329468166913,
+   "value_seed_std": 0.0,
+   "utilization": 0.9196099752808679,
+   "utilization_seed_std": 0.0,
+   "pacing_error": 0.08198791919853243,
+   "pacing_error_seed_std": 0.0,
+   "early_exhaustion": 0.0,
+   "early_exhaustion_seed_std": 0.0,
+   "violations": 0.03333333333333333,
+   "violations_seed_std": 0.0,
+   "regret_vs_oracle": 5.512000070083768,
+   "regret_vs_oracle_seed_std": 0.0,
+   "value_per_budget": 0.3211387278402881,
+   "value_per_budget_seed_std": 0.0,
+   "unused_budget_frac": 0.08039002471913209,
+   "unused_budget_frac_seed_std": 0.0,
+   "n_seeds": 1,
+   "regret_vs_threshold": -0.41511192093427596,
+   "regret_vs_dual": 0.0
+  },
+  "ppo_mlp": {
+   "value": 7.401811215366463,
+   "value_seed_std": 0.0980986150575462,
+   "utilization": 0.872728956600856,
+   "utilization_seed_std": 0.05405595527377881,
+   "pacing_error": 0.15305077189422628,
+   "pacing_error_seed_std": 0.012784323377311647,
+   "early_exhaustion": 0.044666666666666674,
+   "early_exhaustion_seed_std": 0.03484888010316034,
+   "violations": 0.596,
+   "violations_seed_std": 0.5592624110777019,
+   "regret_vs_oracle": 5.817518322884217,
+   "regret_vs_oracle_seed_std": 0.09809861505754632,
+   "value_per_budget": 0.3084088006402693,
+   "value_per_budget_seed_std": 0.004087442294064417,
+   "unused_budget_frac": 0.1272710433991441,
+   "unused_budget_frac_seed_std": 0.05405595527377874,
+   "n_seeds": 5,
+   "regret_vs_threshold": -0.10959366813382587,
+   "regret_vs_dual": 0.3055182528004501
+  },
+  "ppo_gru": {
+   "value": 7.595362903398163,
+   "value_seed_std": 0.11515321396287352,
+   "utilization": 0.947739420235403,
+   "utilization_seed_std": 0.05929469515677722,
+   "pacing_error": 0.09078366395672505,
+   "pacing_error_seed_std": 0.03362397972516384,
+   "early_exhaustion": 0.198,
+   "early_exhaustion_seed_std": 0.1712794986758972,
+   "violations": 1.8173333333333332,
+   "violations_seed_std": 1.401499990089983,
+   "regret_vs_oracle": 5.623966634852519,
+   "regret_vs_oracle_seed_std": 0.1151532139628745,
+   "value_per_budget": 0.3164734543082567,
+   "value_per_budget_seed_std": 0.004798050581786458,
+   "unused_budget_frac": 0.05226057976459705,
+   "unused_budget_frac_seed_std": 0.05929469515677723,
+   "n_seeds": 5,
+   "regret_vs_threshold": -0.3031453561655262,
+   "regret_vs_dual": 0.11196656476874978,
+   "regret_vs_incumbent": 0.11196656476874978
+  }
+ },
+ "ppo_per_seed": {
+  "ppo_mlp": {
+   "0": {
+    "value": 7.440775405551921,
+    "train_seconds": 8.540260791778564
+   },
+   "1": {
+    "value": 7.541647046687925,
+    "train_seconds": 8.038628816604614
+   },
+   "2": {
+    "value": 7.409364513942015,
+    "train_seconds": 8.061109066009521
+   },
+   "3": {
+    "value": 7.30899021978119,
+    "train_seconds": 8.019927024841309
+   },
+   "4": {
+    "value": 7.308278890869266,
+    "train_seconds": 7.988991975784302
+   }
+  },
+  "ppo_gru": {
+   "0": {
+    "value": 7.662145726564745,
+    "train_seconds": 25.70179295539856
+   },
+   "1": {
+    "value": 7.718282433147783,
+    "train_seconds": 25.532867193222046
+   },
+   "2": {
+    "value": 7.564277736259137,
+    "train_seconds": 25.764061212539673
+   },
+   "3": {
+    "value": 7.615868891237924,
+    "train_seconds": 25.706284999847412
+   },
+   "4": {
+    "value": 7.416239729781221,
+    "train_seconds": 25.80856966972351
+   }
+  }
+ },
+ "ope": {
+  "behaviour": "ppo_mlp_eps0.2",
+  "n_episodes": 300,
+  "targets": {
+   "ppo_mlp_best": {
+    "truth": 7.565937441093156,
+    "estimates": {
+     "ips": 5.235044674669233,
+     "snips": 8.536024846817366,
+     "pdis": 5.957979191917456,
+     "dr": 7.671344798871583,
+     "ips_clipped": 2.4852751801628203,
+     "pdis_clipped": 5.049876998515965,
+     "dr_clipped": 7.473909797752869
+    },
+    "abs_error": {
+     "ips": 2.330892766423923,
+     "snips": 0.9700874057242102,
+     "pdis": 1.6079582491756996,
+     "dr": 0.10540735777842691,
+     "ips_clipped": 5.080662260930335,
+     "pdis_clipped": 2.5160604425771904,
+     "dr_clipped": 0.09202764334028668
+    },
+    "ess": 4.37388474328101,
+    "warnings": [
+     "effective sample size 4.4 < 10.0: estimates unreliable",
+     "ESS fraction 0.015 < 0.05: weak overlap between behaviour and target"
+    ]
+   },
+   "ppo_gru_best": {
+    "truth": 7.741552022184121,
+    "estimates": {
+     "ips": 0.2572774623178952,
+     "snips": 5.535165576666569,
+     "pdis": 2.3737817793699705,
+     "dr": 6.817038611569019,
+     "ips_clipped": 0.24355115500374913,
+     "pdis_clipped": 2.291347453047161,
+     "dr_clipped": 6.9284765440974505
+    },
+    "abs_error": {
+     "ips": 7.4842745598662255,
+     "snips": 2.206386445517552,
+     "pdis": 5.36777024281415,
+     "dr": 0.9245134106151021,
+     "ips_clipped": 7.498000867180371,
+     "pdis_clipped": 5.450204569136959,
+     "dr_clipped": 0.8130754780866702
+    },
+    "ess": 5.153917569488871,
+    "warnings": [
+     "effective sample size 5.2 < 10.0: estimates unreliable",
+     "ESS fraction 0.017 < 0.05: weak overlap between behaviour and target"
+    ]
+   },
+   "dual_pacing": {
+    "truth": 7.6968694965414715,
+    "estimates": {
+     "ips": 0.0,
+     "pdis": 1.7844166232168346,
+     "dr": 6.916858286339904,
+     "ips_clipped": 0.0,
+     "pdis_clipped": 0.9026040309879835,
+     "dr_clipped": 6.741678147292985
+    },
+    "abs_error": {
+     "ips": 7.6968694965414715,
+     "pdis": 5.912452873324637,
+     "dr": 0.7800112102015673,
+     "ips_clipped": 7.6968694965414715,
+     "pdis_clipped": 6.794265465553488,
+     "dr_clipped": 0.9551913492484863
+    },
+    "ess": 0.0,
+    "warnings": [
+     "target gives zero probability to 52% of logged actions: trajectory weights are mostly zero",
+     "effective sample size 0.0 < 10.0: estimates unreliable",
+     "ESS fraction 0.000 < 0.05: weak overlap between behaviour and target",
+     "SNIPS unavailable: every trajectory weight is zero (target never agrees with the full logged trajectory)"
+    ]
+   },
+   "threshold_pacing": {
+    "truth": 7.138034589637116,
+    "estimates": {
+     "ips": 0.0,
+     "pdis": 0.6034587086414219,
+     "dr": 6.67662752897743,
+     "ips_clipped": 0.0,
+     "pdis_clipped": 0.6034587086414219,
+     "dr_clipped": 6.746734537359806
+    },
+    "abs_error": {
+     "ips": 7.138034589637116,
+     "pdis": 6.534575880995694,
+     "dr": 0.4614070606596865,
+     "ips_clipped": 7.138034589637116,
+     "pdis_clipped": 6.534575880995694,
+     "dr_clipped": 0.3913000522773098
+    },
+    "ess": 0.0,
+    "warnings": [
+     "effective sample size 0.0 < 10.0: estimates unreliable",
+     "ESS fraction 0.000 < 0.05: weak overlap between behaviour and target",
+     "SNIPS unavailable: every trajectory weight is zero (target never agrees with the full logged trajectory)"
+    ]
+   },
+   "behaviour_itself": {
+    "truth": 6.927214917757712,
+    "estimates": {
+     "ips": 6.80222903958383,
+     "snips": 6.80222893220486,
+     "pdis": 6.802229079500657,
+     "dr": 6.828334576434495,
+     "ips_clipped": 6.80222903958383,
+     "pdis_clipped": 6.802229079500657,
+     "dr_clipped": 6.828334576434495
+    },
+    "abs_error": {
+     "ips": 0.12498587817388174,
+     "snips": 0.12498598555285145,
+     "pdis": 0.12498583825705456,
+     "dr": 0.0988803413232171,
+     "ips_clipped": 0.12498587817388174,
+     "pdis_clipped": 0.12498583825705456,
+     "dr_clipped": 0.0988803413232171
+    },
+    "ess": 299.9999999999189,
+    "warnings": []
+   }
+  }
+ },
+ "ab": {
+  "incumbent": {
+   "name": "dual_pacing",
+   "n": 197,
+   "metrics": {
+    "value": 7.43322332830355,
+    "spend": 22.031939606741492,
+    "utilization": 0.9179974836142287,
+    "value_per_budget": 0.30971763867931457,
+    "pacing_error": 0.08234992513017741,
+    "early_exhaustion": 0.0,
+    "unused_budget_frac": 0.0820025163857712,
+    "violations": 0.030456852791878174,
+    "reward_variance": 0.23069377708995353,
+    "value_early": 2.5707937785859327,
+    "value_mid": 2.449952939922787,
+    "value_late": 2.41247660979483,
+    "spend_early": 5.890779992996736,
+    "spend_mid": 8.013469117651372,
+    "spend_late": 8.127690496093386,
+    "action_frac_0": 0.5561548223350253,
+    "action_frac_1": 0.20103637901861254,
+    "action_frac_2": 0.1359983079526227,
+    "action_frac_3": 0.10681049069373941,
+    "final_pressure": 0.695855520276598,
+    "regret": 5.691222769102795
+   }
+  },
+  "challenger": {
+   "name": "ppo_gru",
+   "n": 203,
+   "metrics": {
+    "value": 8.000462014029702,
+    "spend": 22.582955725195188,
+    "utilization": 0.9409564885497996,
+    "value_per_budget": 0.3333525839179043,
+    "pacing_error": 0.09477344447793855,
+    "early_exhaustion": 0.08866995073891626,
+    "unused_budget_frac": 0.05904351145020043,
+    "violations": 1.0591133004926108,
+    "reward_variance": 0.24876197394473715,
+    "value_early": 2.62602077448473,
+    "value_mid": 2.768282148741174,
+    "value_late": 2.6061590908037977,
+    "spend_early": 6.1276299436193735,
+    "spend_mid": 7.670235700585414,
+    "spend_late": 8.785090080990402,
+    "action_frac_0": 0.5171387520525452,
+    "action_frac_1": 0.15876436781609193,
+    "action_frac_2": 0.31783661740558294,
+    "action_frac_3": 0.0062602627257799665,
+    "final_pressure": 0.6728997576993867,
+    "regret": 5.189065668242571
+   }
+  },
+  "p_value": 0.08391608391608392,
+  "guardrail_failures": [
+   "primary metric CI lower bound -0.0405 < -0.0",
+   "violations increased by 1.029 > 0.5"
+  ],
+  "promote": false
+ },
+ "ab_value_delta": {
+  "metric": "value",
+  "incumbent": 7.43322332830355,
+  "challenger": 8.000462014029702,
+  "delta": 0.5672386857261529,
+  "ci_low": -0.040528574340015056,
+  "ci_high": 1.157214216950237,
+  "std_error": 0.31219417664487037
+ },
+ "shadow": {
+  "divergence_rate": 0.3979166666666667,
+  "divergence_by_third": [
+   0.380625,
+   0.37812500000000004,
+   0.435
+  ],
+  "incumbent_value": 7.655935136342379,
+  "candidate_replay_value": 8.065526036997815
+ },
+ "throughput": {
+  "env_steps_per_sec": 50885.751428260905,
+  "ope_trajectory_evals_per_sec": 297.01565514539374,
+  "ab_episodes_per_sec": 517.8490327610841,
+  "total_seconds": 179.37051701545715,
+  "episodes_simulated_training": 96000
+ },
+ "ledger_status": {
+  "policy_values": "CARRY_FORWARD",
+  "ope_accuracy": "CARRY_FORWARD",
+  "ab_result": "CARRY_FORWARD",
+  "throughput": "CARRY_FORWARD_WITH_INTERPRETATION_NOTE"
+ },
+ "revalidation_required": false,
+ "notes": [
+  "Simulated environment; no real workload, traffic or budget data.",
+  "Sequence PPO > stateless PPO on the seed means but the online dual pacer remains best; the A/B harness rejected the sequence-PPO challenger (CI includes 0; more clipped-budget attempts).",
+  "IPS/PDIS collapse for targets far from the \u03b5-mixed behaviour policy (48-step trajectories); per-decision DR stays within 0.1-0.9 of simulator truth.",
+  "Throughput measured on one laptop CPU; see summary.md."
+ ]
+}

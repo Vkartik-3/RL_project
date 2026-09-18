@@ -22,3 +22,6 @@ class Event(str, Enum):
     CANDIDATE_ROLLED_BACK = "candidate.rolled_back"
     SERVING_REQUEST = "serving.request"
     SERVING_ERROR = "serving.error"
+    OPE_EVALUATED = "ope.evaluated"
+    EXPERIMENT_AB = "experiment.ab"
+    EXPERIMENT_SHADOW = "experiment.shadow"

@@ -159,6 +159,21 @@ Status: **Implemented** (CPU-validated), **Implemented · GPU-validated only by 
 | Simulated / yield-series data generators | `domains/synthesis/generator.py`, `scripts/generate_synthesis_data.py` | Implemented | unit/test_benchmark_semantics | ✓ | – | – | – | |
 | Tabular actor-critic PPO, leave-one-molecule-out | `domains/synthesis/tabular_ppo.py`, `examples/05_synthesis_generalization.py` | Implemented | unit/test_synthesis_domain, unit/test_benchmark_semantics | ✓ | – | – | post_training/tabular_ppo_synthesis | exact reproduction |
 
+## Sequential decisioning (budgeted allocation)
+
+| Capability | Module | Status | Tests | CPU validated | CUDA required | Multi-GPU required | Benchmark | Notes |
+|---|---|---|---|---|---|---|---|---|
+| Finite-horizon budgeted environment with hidden policy-dependent pressure | `domains/allocation/env.py` | Implemented | unit/test_allocation_env | ✓ | – | – | decisioning/budgeted_allocation | POMDP; endogenous feedback tested |
+| Threshold heuristic, primal-dual pacer | `domains/allocation/policies.py` | Implemented | integration/test_allocation_pipeline | ✓ | – | – | same | |
+| Stateless and GRU sequence PPO via the shared trainer | `domains/allocation/ppo.py`, `policies.py` | Implemented | integration/test_allocation_pipeline | ✓ | – | – | same | manifest algorithm `allocation_ppo` |
+| Logged trajectories with propensities | `domains/allocation/rollout.py` | Implemented | unit/test_allocation_ope | ✓ | – | – | same | schema v1 |
+| OPE: IPS, SNIPS, PDIS, DR, clipping, ESS/support diagnostics, bootstrap CIs | `domains/allocation/ope.py` | Implemented | unit/test_allocation_ope (hand-computed references) | ✓ | – | – | same | |
+| Hindsight oracle / regret | `domains/allocation/oracle.py` | Implemented | unit/test_allocation_env | ✓ | – | – | same | upper bound, not a policy |
+| Pacing / budget metrics | `domains/allocation/rollout.py` | Implemented | unit/test_allocation_env | ✓ | – | – | same | |
+| Simulated A/B (deterministic assignment, bootstrap CI, permutation test, guardrails) → promotion gate | `domains/allocation/experiment.py`, `configs/allocation/promotion_gate.yaml` | Implemented | integration/test_allocation_pipeline | ✓ | – | – | same | |
+| Shadow evaluation | `domains/allocation/experiment.py::shadow_evaluate` | Implemented | integration/test_allocation_pipeline | ✓ | – | – | same | |
+| One-command benchmark and CLI (`forgeline allocation …`) | `domains/allocation/benchmark.py`, `cli/main.py` | Implemented | integration/test_allocation_pipeline | ✓ | – | – | same | |
+
 ## Not included
 
 | Capability | Decision |

@@ -8,7 +8,7 @@ Path conventions: `src/forgeline/...` is abbreviated to the package-relative pat
 
 ## Contents
 
-1. Executive snapshot · 2. Repository / environment · 3. Complete architecture · 4. Data system · 5. Model architectures · 6. Pretraining / SFT / distillation · 7. PEFT / LoRA / QLoRA · 8. Reward modeling · 9. DPO · 10. PPO · 11. GRPO · 12. RLVR · 13. Agent GRPO / tool use · 14. Process rewards · 15. RLAIF · 16. STaR · 17. DAPO · 18. Hill climbing and other post-training · 19. Distributed systems · 20. Ray orchestration · 21. Checkpointing / recovery · 22. Evaluation · 23. Quantization / export · 24. Inference engine · 25. Serving · 26. Model lifecycle · 27. Dashboard / observability · 28. Failure engineering · 29. Complete test evidence · 30. Complete benchmark ledger · 31. Historical carry-forward analysis · 32. Metrics requiring interpretation · 33. Metrics requiring evidence recovery · 34. Metrics requiring revalidation · 35. Bug-fix history · 36. Implementation ownership matrix · 37. Technology evidence matrix · 38. Claim bank · 39. Interview story bank · 40. Truth / boundary ledger · 41. Hardware validation matrix · 42. Future optional experiments · 43. GenAI infrastructure concept mapping · 44. Resume-safe summary
+1. Executive snapshot · 2. Repository / environment · 3. Complete architecture · 4. Data system · 5. Model architectures · 6. Pretraining / SFT / distillation · 7. PEFT / LoRA / QLoRA · 8. Reward modeling · 9. DPO · 10. PPO · 11. GRPO · 12. RLVR · 13. Agent GRPO / tool use · 14. Process rewards · 15. RLAIF · 16. STaR · 17. DAPO · 18. Hill climbing and other post-training · 19. Distributed systems · 20. Ray orchestration · 21. Checkpointing / recovery · 22. Evaluation · 23. Quantization / export · 24. Inference engine · 25. Serving · 26. Model lifecycle · 27. Dashboard / observability · 28. Failure engineering · 29. Complete test evidence · 30. Complete benchmark ledger · 31. Historical carry-forward analysis · 32. Metrics requiring interpretation · 33. Metrics requiring evidence recovery · 34. Metrics requiring revalidation · 35. Bug-fix history · 36. Implementation ownership matrix · 37. Technology evidence matrix · 38. Claim bank · 39. Interview story bank · 40. Truth / boundary ledger · 41. Hardware validation matrix · 42. Future optional experiments · 43. GenAI infrastructure concept mapping · 44. Resume-safe summary · 45. Sequential decisioning under uncertainty: budgeted allocation
 
 ---
 
@@ -19,14 +19,14 @@ Path conventions: `src/forgeline/...` is abbreviated to the package-relative pat
 | Project | **Forgeline** — post-training, distributed training, evaluation, inference and model-lifecycle framework for language models (Python package `forgeline`, version 0.1.0, MIT) |
 | Repository | `Meta_RL_Project/forgeline/`, branch `main`, pushed to `origin/main` |
 | Commits | see `git log` |
-| Size | 134 Python modules (~14.4k lines) + a 1-file dashboard page, 26 test modules / 229 tests, 40 config files, 5 examples, 7 scripts, 22 documents |
-| Tests (full environment: torch 2.14, transformers 5.17, PEFT 0.21, Ray 2.58, macOS/Apple Silicon CPU) | **221 passed, 8 skipped** (~37 s); skips: 7 hardware tests (4 need CUDA, 2 need ≥2 GPUs, 1 needs the deepspeed extra) + 1 smoke test that only runs without Ray |
-| Tests (clean `pip install -e ".[dev]"`, no HuggingFace/Ray) | **204 passed, 9 skipped** (~10 s); Ray is never imported by the core |
+| Size | 143 Python modules (~16.5k lines) + a 1-file dashboard page, 29 test modules / 259 tests, 47 config files, 6 examples, 7 scripts, 23 documents |
+| Tests (full environment: torch 2.14, transformers 5.17, PEFT 0.21, Ray 2.58, macOS/Apple Silicon CPU) | **251 passed, 8 skipped** (~41 s); skips: 7 hardware tests (4 need CUDA, 2 need ≥2 GPUs, 1 needs the deepspeed extra) + 1 smoke test that only runs without Ray |
+| Tests (clean `pip install -e ".[dev]"`, no HuggingFace/Ray) | **234 passed, 9 skipped**; Ray is never imported by the core |
 | Language / framework | Python ≥ 3.10, PyTorch ≥ 2.1, NumPy, PyYAML; optional extras `training`, `huggingface`, `distributed`, `ray`, `serving`, `observability`, `chemistry`, `dev` |
 | Architecture | one experiment manifest → one `RunContext` → one `Trainer` lifecycle over pluggable `PostTrainingAlgorithm`s, driven by contracts (`PolicyModel`, `RewardProvider`, `Verifier`, `Trajectory`, `DistributedStrategy`, `EvaluationResult`, `MetricsSink`, `ModelCandidate`); a native decoder-only transformer and a HuggingFace+PEFT policy behind the same surface |
-| Most important capabilities | 15 training/post-training algorithms incl. PPO, GRPO, agent GRPO with tools, process-reward GRPO, DAPO, RLVR, RLAIF, STaR; DDP for every algorithm, FSDP, tensor/pipeline parallel components, DeepSpeed strategy; optional Ray rollout/reward/tool/evaluation workers with weight sync and recovery; atomic checkpoints with exact resume; NF4/QLoRA and GGUF export; continuous-batching KV-cached inference engine with paged block accounting; OpenAI-compatible server; candidate registry with fail-closed promotion gates, deterministic champion/challenger routing, rollback; read-only dashboard |
-| Most important measured results | 421M-parameter transformer pretrained on ~491M FineWeb-Edu tokens on one A40 to 3.5834 validation loss at ~20.7k tokens/s (H05–H11); 10.6M char-level model to 1.479 val loss on CPU (H02); Qwen2.5-7B LoRA (5.05M params) SFT loss 1.663→1.008 (H32), DPO and 200-iteration PPO executed on one GPU (H35, H43); GSM8K tool-agent GRPO: best batch reward 0.5575, tool-use rate 0.5→0.9 on held-out problems (H53, H56); process-reward GRPO best 1.0659 (H59); every synthesis "held-out reward" (0.808 etc.) is a dataset statistic, reproduced exactly and labelled as such (H39) |
-| Historical metric ledger | 82 records: 19 CARRY_FORWARD, 42 CARRY_FORWARD_WITH_INTERPRETATION_NOTE, 5 NEEDS_EVIDENCE_RECOVERY, 0 REVALIDATE, 16 DO_NOT_USE |
+| Most important capabilities | 15 training/post-training algorithms incl. PPO, GRPO, agent GRPO with tools, process-reward GRPO, DAPO, RLVR, RLAIF, STaR; DDP for every algorithm, FSDP, tensor/pipeline parallel components, DeepSpeed strategy; optional Ray rollout/reward/tool/evaluation workers with weight sync and recovery; atomic checkpoints with exact resume; NF4/QLoRA and GGUF export; continuous-batching KV-cached inference engine with paged block accounting; OpenAI-compatible server; candidate registry with fail-closed promotion gates, deterministic champion/challenger routing, rollback; read-only dashboard; a sequential-decisioning subsystem (budgeted allocation POMDP with policy-dependent dynamics, primal-dual pacer, stateless and GRU sequence PPO, OPE with IPS/SNIPS/PDIS/DR, hindsight oracle, simulated A/B with guardrails, shadow evaluation) |
+| Most important measured results | 421M-parameter transformer pretrained on ~491M FineWeb-Edu tokens on one A40 to 3.5834 validation loss at ~20.7k tokens/s (H05–H11); 10.6M char-level model to 1.479 val loss on CPU (H02); Qwen2.5-7B LoRA (5.05M params) SFT loss 1.663→1.008 (H32), DPO and 200-iteration PPO executed on one GPU (H35, H43); GSM8K tool-agent GRPO: best batch reward 0.5575, tool-use rate 0.5→0.9 on held-out problems (H53, H56); process-reward GRPO best 1.0659 (H59); every synthesis "held-out reward" (0.808 etc.) is a dataset statistic, reproduced exactly and labelled as such (H39); budgeted-allocation benchmark (5 seeds × 300 episodes, CPU): dual pacer 7.71, GRU sequence PPO 7.60 ± 0.12, stateless PPO 7.40 ± 0.10, heuristic 7.29, oracle bound 13.22; DR OPE within 0.1–0.9 of simulator truth; simulated A/B rejected the sequence-PPO challenger (§45) |
+| Historical metric ledger | 82 historical records (§30) + the current decisioning record (§45): 19 CARRY_FORWARD, 42 CARRY_FORWARD_WITH_INTERPRETATION_NOTE, 5 NEEDS_EVIDENCE_RECOVERY, 0 REVALIDATE, 16 DO_NOT_USE |
 
 ---
 
@@ -74,7 +74,9 @@ src/forgeline/
 ├── observability/   logging, metrics (sinks), events, tracing
 ├── dashboard/       data (file readers), server (routes), static/index.html  [optional to run]
 ├── domains/synthesis/  reward, constraints, prompts, features, preferences, generator, tabular_ppo
-└── cli/main.py      presets, validate, data, train, generate, evaluate, serve, export, registry, rlaif, dashboard, synthesis-ppo
+├── domains/allocation/ env (BudgetedAllocationEnv, VectorEnv), policies (threshold, dual pacer, MLP/GRU actor-critics, ε-mix), ppo (AllocationPPOAlgorithm),
+│                    rollout (logged trajectories, pacing metrics), ope (IPS/SNIPS/PDIS/DR), oracle, experiment (A/B, shadow), benchmark
+└── cli/main.py      presets, validate, data, train, generate, evaluate, serve, export, registry, rlaif, dashboard, allocation, synthesis-ppo
 ```
 
 End-to-end flow and the code that owns each step:
@@ -92,6 +94,7 @@ End-to-end flow and the code that owns each step:
 | serving | `serving/api.py::Router` + `serving/server.py::ServingServer`, `cli serve --routing` |
 | lifecycle | `deployment/registry.py::CandidateRegistry`, `promotion.py::PromotionGate`, `rollout.py::RoutingPolicy`, `rollback.py`, `cli registry` |
 | observability | `observability/metrics.py` sinks + `events.py`, `logging.py`, `tracing.py`; `cli dashboard` |
+| sequential decisioning | `domains/allocation/*` via `allocation_ppo` in `training/factory.py` and `cli allocation {benchmark,ope,ab,shadow}` |
 
 Contracts (`core/protocols.py`): `PolicyModel` (encode/decode/generate/logprobs/values/reference/trainable_parameters/state), `RewardProvider.score(Trajectory) → RewardResult(value, components, passed, info)`, `Verifier.verify(output, target) → RewardResult`, `Trajectory` (prompt_ids, response_ids, texts, task, segments, tool_results, truncated, old_logprobs, reward, meta), `DatasetProvider`, `MetricsSink`, `EvaluationResult(suite, metrics, n_samples, details, per_item)`, `PostTrainingAlgorithm` (`parameters`, `collect`, `loss`, `modules`, `evaluate`, `state`, `load_state`, `model_spec`, `tokenizer_meta`, `on_step_end`).
 
@@ -518,9 +521,9 @@ Recovery behaviours: atomic checkpoints + validation + resume (§21); verifier e
 
 ## 29. Complete test evidence
 
-Full environment: **221 passed, 8 skipped** (229 collected). Clean `.[dev]` install: **204 passed, 9 skipped** (HuggingFace module 7 tests and Ray module 11 tests skip via `importorskip`; `test_ray_backend_reports_missing_extra` runs instead of skipping). Previous state before this audit: 192/6 and 185/7.
+Full environment: **251 passed, 8 skipped** (259 collected). Clean `.[dev]` install: **234 passed, 9 skipped** (HuggingFace module 7 tests and Ray module 11 tests skip via `importorskip`; `test_ray_backend_reports_missing_extra` runs instead of skipping). Previous state before this audit: 192/6 and 185/7.
 
-By directory (full environment): unit 116 · integration 85 · failure 17 · smoke 3 (+1 skipped) · hardware 0 (+7 skipped).
+By directory (full environment): unit 133 · integration 98 · failure 17 · smoke 3 (+1 skipped) · hardware 0 (+7 skipped).
 
 By subsystem (test functions; parametrised cases counted once):
 
@@ -548,8 +551,11 @@ By subsystem (test functions; parametrised cases counted once):
 | observability / CLI | 5 + 6 CLI pipeline | `test_observability_cli.py`, `test_cli_pipeline.py` |
 | failure handling | 17 | `test_failure_modes.py` |
 | smoke / packaging | 4 | `test_smoke.py` |
+| sequential decisioning: environment, oracle, pacing metrics | 10 | `test_allocation_env.py` |
+| sequential decisioning: OPE formulas, schema, support, bootstrap | 7 | `test_allocation_ope.py` |
+| sequential decisioning: baselines, GRU history, PPO via trainer, OPE on logs, A/B, shadow, lifecycle, CLI | 13 | `test_allocation_pipeline.py` |
 
-Especially valuable tests: `test_sequence_mean_ppo_ratio_reference` (ratio correctness against an independent formula); `test_dpo_mean_reduction_reference`; `test_resume_matches_uninterrupted` (exact continuation); `test_checkpoint_incomplete_and_truncated`; `test_routing_deterministic_and_percentages`; `test_gate_succeeds_and_rejects` / `test_promotion_failure`; `test_gguf_export_roundtrip` (offsets); `test_code_verifier_and_executor` / `test_agent_rollout_executes_tool_calls`; `test_ddp_replicas_stay_identical` (two real processes); clean-install run (204/9) proving optional dependencies; `test_core_import_does_not_import_ray`; `test_synthesis_pipelines_on_hf_backend` (HF backend genuinely executed on CPU with a tiny local Llama built in the fixture); `test_synthesis_rule_reward_ignores_generated_text_for_nested_records` (pins the 0.808/0.9007 interpretation); `test_attention_patterns_reproduce_the_attention_output`.
+Especially valuable tests: `test_sequence_mean_ppo_ratio_reference` (ratio correctness against an independent formula); `test_dpo_mean_reduction_reference`; `test_resume_matches_uninterrupted` (exact continuation); `test_checkpoint_incomplete_and_truncated`; `test_routing_deterministic_and_percentages`; `test_gate_succeeds_and_rejects` / `test_promotion_failure`; `test_gguf_export_roundtrip` (offsets); `test_code_verifier_and_executor` / `test_agent_rollout_executes_tool_calls`; `test_ddp_replicas_stay_identical` (two real processes); clean-install run (204/9) proving optional dependencies; `test_core_import_does_not_import_ray`; `test_synthesis_pipelines_on_hf_backend` (HF backend genuinely executed on CPU with a tiny local Llama built in the fixture); `test_synthesis_rule_reward_ignores_generated_text_for_nested_records` (pins the 0.808/0.9007 interpretation); `test_attention_patterns_reproduce_the_attention_output`; `test_core_formulas_against_hand_values` (IPS/SNIPS/PDIS/DR/ESS/clipping against hand-computed numbers); `test_endogenous_feedback_changes_future_state_under_same_seed`; `test_ppo_improves_over_random_init`; `test_permutation_test_and_ab_decisions`; `test_lifecycle_with_ab_gate`.
 
 Skips and why: `test_cuda_bf16_training_step`, `test_cuda_fp16_grad_scaler_enabled`, `test_cuda_inference_engine`, `test_ray_rollout_worker_uses_assigned_gpu` — no CUDA device; `test_fsdp_wrap_under_torchrun`, `test_tensor_parallel_two_ranks` — fewer than 2 CUDA devices; `test_deepspeed_initialize` — deepspeed extra not installed; `test_ray_backend_reports_missing_extra` — Ray is installed (runs in the clean install). Clean install additionally skips the HuggingFace and Ray integration modules.
 
@@ -1525,6 +1531,7 @@ None. The only computational differences between the recorded runs and Forgeline
 | Observability sinks | NATIVE_FORGELINE (JSONL/logging/tracing); THIN_WRAPPER (W&B, TensorBoard) | | wandb, tensorboard |
 | Dashboard | NATIVE_FORGELINE | data layer, routes, page, attention recomputation | — |
 | Encoder reward models | FORGELINE_INTEGRATION_OF_EXTERNAL_LIBRARY | heads, losses, blending | transformers encoders |
+| Budgeted allocation environment, baselines, GRU/MLP policies, OPE, oracle, A/B, shadow | NATIVE_FORGELINE | simulator, primal-dual pacer, actor-critics, estimators, bootstrap/permutation tests, assignment | numpy, `torch.nn.GRU` |
 
 Wording guide: "implemented/built" for NATIVE_FORGELINE and FORGELINE_IMPLEMENTATION_USING_PYTORCH_PRIMITIVES; "integrated" for FORGELINE_INTEGRATION_OF_EXTERNAL_LIBRARY; "configured/wired" for THIN_WRAPPER and CONFIGURATION_ONLY.
 
@@ -1559,6 +1566,11 @@ Wording guide: "implemented/built" for NATIVE_FORGELINE and FORGELINE_IMPLEMENTA
 | OpenAI-compatible serving | router/server | `serving/` | native | live HTTP test | none | "OpenAI-compatible HTTP serving with SSE streaming, routing and metrics" | no auth; no latency numbers |
 | Model lifecycle | registry/gates/routing/rollback | `deployment/` | native | 7 + CLI | — | "champion/challenger lifecycle with fail-closed gates, deterministic routing and rollback" | single-writer JSON |
 | torch.compile | trainer | `trainer.py` | thin wrapper | eager-backend equivalence test | H12 (historical ~39%) | "torch.compile integration (historical ~39% throughput gain on A40)" | not re-measured |
+| Sequential decision-making under uncertainty | budgeted allocation POMDP | `domains/allocation/env.py` | native | 10 env tests | decisioning/budgeted_allocation | "designed a finite-horizon budget-constrained decision environment with stochastic, non-stationary opportunities and hidden policy-dependent dynamics" | simulator |
+| Sequence modeling (GRU policy) | history-window GRU actor-critic | `domains/allocation/policies.py::GRUActorCritic` | native on `nn.GRU` | `test_gru_policy_consumes_history_window` | +0.19 over stateless PPO across 5 seeds | "sequence-conditioned RL policy that infers latent state from history" | did not beat the online pacer |
+| Online optimization / constrained optimization | primal-dual pacing controller | `policies.py::DualPacingPolicy` | native | pacer tests | best policy (7.71) | "Lagrangian dual-descent budget pacing" | fixed step size |
+| Offline policy evaluation / counterfactual evaluation | IPS, SNIPS, PDIS, DR, diagnostics, bootstrap CIs | `domains/allocation/ope.py` | native | 7 hand-value tests + log test | DR within 0.1–0.9 of truth | "implemented and verified IPS/SNIPS/DR estimators with support diagnostics" | trajectory IS degenerates at long horizons |
+| A/B testing / experimentation | deterministic assignment, bootstrap CI, permutation test, guardrails → gates | `domains/allocation/experiment.py` | native | A/B + lifecycle tests | 400-episode simulated experiment | "simulated A/B harness with statistical tests wired into promotion gates" | simulated only |
 
 ---
 
@@ -1608,6 +1620,13 @@ Raw, evidence-backed candidate claims (not final bullets). Confidence reflects e
 | C38 | Multi-GPU scaling numbers | — | — | none exist | — | — | — | — | — | — | NO |
 | C39 | Reward improvement from RL on the synthesis task | — | — | none (record statistics) | — | — | — | — | — | — | NO |
 | C40 | GRPO 0.823 / RLAIF 0.814 / STaR 0.791 | — | — | unrecovered | §33 | — | — | — | — | — | NO |
+| C41 | Sequential decisioning environment | finite-horizon budgeted allocation with hidden pressure that raises future costs and lowers responses; seeded, vectorised | 48 steps, budget 24; ~50k env steps/s | — | `domains/allocation/env.py`, §45 | 10 env tests | CPU | all | synthetic dynamics | HIGH | YES ("simulated") |
+| C42 | Online primal-dual pacing | λ-priced allocation with subgradient budget-rate control | 300 held-out episodes | 7.71 value, 0.92 utilisation, pacing error 0.08 (best policy) | §45 | pacer tests | CPU | all | fixed α | HIGH | YES |
+| C43 | Stateless vs sequence-conditioned PPO | MLP vs GRU history policy through the shared trainer | 5 seeds × 9,600 training episodes each | 7.40 ± 0.10 vs 7.60 ± 0.12 | §45 | PPO tests | CPU (8 s / 26 s per seed) | all | neither beat the pacer | HIGH | QUALIFIED ("history improved PPO; online optimizer still best") |
+| C44 | OPE estimators verified and applied | IPS/SNIPS/PDIS/DR + ESS/support/overlap + bootstrap CIs | 300 logged episodes × 5 targets | DR abs. error 0.1–0.9; IPS collapses (ESS ≈ 0) | §45 | 7 hand-value tests + log test | CPU | all | long-horizon IS variance | HIGH | YES |
+| C45 | Simulated A/B with guardrails feeding promotion gates | hash assignment, bootstrap CI, permutation test, guardrails, gate metrics | 400 episodes | Δ +0.57, CI [−0.04, +1.16], p 0.084 → rejected | §45 | A/B + lifecycle tests | CPU | all | simulated | HIGH | YES ("simulated A/B") |
+| C46 | Shadow evaluation | candidate proposes in the incumbent's episodes; divergence and replay value | 100 episodes | divergence 0.40 | §45 | shadow test | CPU | all | — | HIGH | YES |
+| C47 | Hindsight oracle / regret | fractional-knapsack upper bound ignoring pressure | 300 episodes | oracle 13.22; regrets 5.5–5.9 | §45 | oracle test | CPU | all | loose bound | HIGH | QUALIFIED (label as upper bound) |
 
 ---
 
@@ -1637,6 +1656,12 @@ Raw, evidence-backed candidate claims (not final bullets). Confidence reflects e
 
 **S12 — Evaluation integrity: the 0.808 that every method "achieved".** Traced the evaluator to record scoring, reproduced the number exactly without a model, showed the rule reward could not see generated conditions, simulated the PPO training-reward statistics from record sampling, and relabelled every dependent number instead of deleting it. Follow-ups: what a policy-dependent evaluation needs (outcome model), why negative results were kept. Files: `evaluation/reward.py`, `test_benchmark_semantics.py`, §32.
 
+**S14 — Making the environment react to the policy.** *Problem:* a benchmark where future opportunities are exogenous lets a myopic policy look sequential without being so. *Decision:* a hidden pressure state `p_{t+1} = δp_t + ηu_t` that multiplies future costs by `(1+κp)` and response rates by `(1−φp)`; pressure is not observed, so the problem is a POMDP and history carries information. *Validation:* same seed, different action prefixes → different effective costs/rates (`test_endogenous_feedback_changes_future_state_under_same_seed`); `pressure_gain: 0` restores exogeneity. *Result:* the GRU policy, which can infer pressure from realised costs, beat the stateless policy on every seed. *Follow-ups:* identifiability of pressure, why the oracle ignores it (upper bound), what a model-based baseline would need. Files: `domains/allocation/env.py`, `oracle.py`.
+
+**S15 — Why IPS failed and DR worked.** With 48-step trajectories the product of per-step ratios has ESS ≈ 0 for any target far from the ε-mixed behaviour policy; SNIPS becomes undefined when all weights vanish. Implemented per-decision IS and doubly-robust estimation with a ridge Q̂ and reported support/ESS diagnostics instead of a number; DR landed within 0.1–0.9 of simulator truth for every target, IPS did not. Follow-ups: bias of clipped weights, choice of Q̂, when to trust DR CIs. Files: `domains/allocation/ope.py`, `tests/unit/test_allocation_ope.py`.
+
+**S16 — Letting the A/B harness say no.** The GRU challenger was +0.57 on average but its bootstrap CI crossed zero (p = 0.084) and it clipped the budget more often; the guardrails rejected it and the same numbers, exported as `ab/*` gate metrics, fail the `PromotionGate`. Kept as a negative result rather than tuning until it passed. Follow-ups: sequential testing / early stopping, power analysis, guardrail selection. Files: `domains/allocation/experiment.py`, `configs/allocation/promotion_gate.yaml`.
+
 **S13 — Failure recovery in tool-using agents.** Tool exceptions and timeouts are injected as `<tool_result>ERROR…` observations so episodes continue and the policy can learn from failures; verifier exceptions become zero rewards; non-finite rewards abort with the provider's name. Files: `rollouts/agent.py`, `rollouts/tools/python_executor.py`, `test_tool_execution_failure_is_injected`.
 
 ---
@@ -1665,6 +1690,10 @@ Raw, evidence-backed candidate claims (not final bullets). Confidence reflects e
 | HF backend | yes | yes | CPU, tiny local Llama/BERT | CPU | current | — | tests | — | YES |
 | 0.808 held-out | yes (evaluator) | yes | — | any | historical + reproduced | yes | results JSON, test | yes | dataset statistic only |
 | Multi-GPU scaling | — | no | — | — | — | no | — | — | NO |
+| Budgeted-allocation benchmark (pacer, PPO, GRU PPO) | yes | yes | laptop CPU | CPU | current | yes (300 episodes × 5 seeds) | `benchmarks/decisioning/budgeted_allocation` | — | YES (simulated) |
+| OPE accuracy | yes | yes | CPU | CPU | current | yes | same | — | YES |
+| Simulated A/B, shadow | yes | yes | CPU | CPU | current | yes | same | — | YES ("simulated") |
+| Real workload / traffic / budgets | — | no | — | — | — | no | — | — | NO |
 
 ---
 
@@ -1687,6 +1716,7 @@ Raw, evidence-backed candidate claims (not final bullets). Confidence reflects e
 | NF4 / QLoRA / GGUF | ✓ | — | — | none | tests | GPU memory and accuracy measurements |
 | 8-bit HF loading | — | needs CUDA + bitsandbytes | — | none | none | one load on GPU |
 | Lifecycle / dashboard / observability | ✓ | — | — | — | tests | — |
+| Sequential decisioning (env, PPO, OPE, A/B) | ✓ full benchmark | not needed | not needed | — | 30 tests + benchmark | none; CPU is the target |
 
 ---
 
@@ -1728,6 +1758,14 @@ Only experiments that would add evidence (not reruns for repository reasons):
 | Regression detection | gate rules, `evaluate_regression` | `promotion.py`, `regression.py` | tests | "fail-closed regression gates" | — |
 | AI-assisted workflow | RLAIF pairwise/constitutional data generation, self-judge rounds | `rlaif.py` | H64–H65 | "AI-feedback data pipelines" | LLM judges not measured |
 | Agents / tool execution | multi-turn tool episodes, sandboxed executor, tagged rewards | `rollouts/agent.py`, `tools/` | H53–H57 | "tool-using agent RL with sandboxed Python execution" | security sandboxing |
+| Sequential decision-making under uncertainty | budgeted allocation POMDP: act before future opportunities are revealed | `domains/allocation/env.py` | env tests, benchmark | "finite-horizon decisions under uncertainty with a hard budget" | simulator |
+| Policy-dependent environments | hidden pressure driven by past intensities | `env.py` | endogeneity test | "policy-dependent (endogenous) dynamics" | stylised |
+| Reinforcement learning (control) | PPO on the environment through the shared trainer | `domains/allocation/ppo.py` | PPO tests, 5-seed benchmark | "trained RL allocation policies with PPO" | did not beat the pacer |
+| Sequence modeling | GRU over history windows | `policies.py::GRUActorCritic` | history test, +0.19 | "sequence-conditioned policy" | — |
+| Online optimization / constrained optimization | dual-price pacing with subgradient updates | `policies.py::DualPacingPolicy` | best policy | "Lagrangian budget pacing" | — |
+| Offline / counterfactual policy evaluation | IPS, SNIPS, PDIS, DR, diagnostics, bootstrap | `ope.py` | hand-value tests, accuracy vs truth | "verified OPE estimators with support diagnostics" | long-horizon variance |
+| A/B testing / experimentation | deterministic assignment, bootstrap CI, permutation test, guardrails | `experiment.py` | A/B tests, benchmark | "simulated A/B experiments with statistical guardrails" | simulated |
+| Champion/challenger deployment | A/B gate metrics → `PromotionGate` → registry → rollback | `experiment.py`, `deployment/` | lifecycle test | "experiment-gated promotion with rollback" | — |
 
 ---
 
@@ -1741,8 +1779,162 @@ Facts that can be used as written (see §38 for qualifications):
 * Trained a tool-using 7B agent with GRPO and verifiable rewards on GSM8K (best batch reward 0.56; held-out tool-use rate 0.5 → 0.9; accuracy unchanged); implemented step-level process rewards.
 * Data-parallel training for every algorithm (validated with two processes), FSDP/DeepSpeed strategies, Megatron-style tensor-parallel layers and a 1F1B pipeline scheduler, and optional Ray actor pools for rollouts, rewards, tools and sharded evaluation with on-policy weight sync, placement groups and worker recovery (validated on a local Ray instance).
 * Fault-tolerant directory checkpoints with size validation, rotation and exact resume (losses match within 1e-5); NF4/QLoRA; spec-compliant GGUF export (FP16/Q8_0/Q4_0); continuous-batching KV-cached inference engine with paged block accounting (batched output identical to greedy); OpenAI-compatible SSE serving; candidate registry with fail-closed promotion gates, sha256 champion/challenger routing, shadow decisions, feature flags and rollback; structured metrics/events and a read-only dashboard with exact attention maps.
+* Sequential decisioning: built a finite-horizon budgeted allocation environment with hidden policy-dependent dynamics, a primal-dual pacing controller, stateless and GRU sequence-conditioned PPO policies through the shared trainer, verified IPS/SNIPS/PDIS/DR offline evaluation with support diagnostics and bootstrap CIs, a hindsight oracle, simulated A/B experiments with guardrails feeding the promotion gates, and shadow evaluation; measured on CPU over 5 seeds × 300 episodes (pacer 7.71 > GRU PPO 7.60 ± 0.12 > stateless PPO 7.40 ± 0.10 > heuristic 7.29; oracle 13.22; A/B rejected the challenger).
 * Fixed defects in earlier versions: DPO that could not execute, PPO/GRPO ratios computed over the whole vocabulary, GGUF offsets/Q4_0 packing, a multi-agent trainer that crashed, a batcher that never reused KV caches; identified that all "held-out reward" numbers were dataset statistics and relabelled them.
 
-Not to be claimed: multi-GPU scaling numbers, reward improvement on the synthesis task, GRPO 0.823 / RLAIF 0.814 / STaR 0.791, "PagedAttention", GPU throughput of Forgeline's own code, Ray cluster execution.
+Not to be claimed: real workloads, advertiser/traffic/budget data, live delivery or production A/B tests, SOTA bidding, multi-GPU scaling numbers, reward improvement on the synthesis task, GRPO 0.823 / RLAIF 0.814 / STaR 0.791, "PagedAttention", GPU throughput of Forgeline's own code, Ray cluster execution.
 
 Evidence locations: `benchmarks/**/results.json` (+ `ledger_status`), `benchmarks/historical_ledger.json`, `tests/unit/test_benchmark_semantics.py`, and this dossier.
+
+---
+
+## 45. Sequential decisioning under uncertainty: budgeted allocation
+
+**Status:** implemented, tested and measured on CPU in this extension (package `forgeline.domains.allocation`, 8 modules; manifest algorithm `allocation_ppo`; CLI group `forgeline allocation`). **Framing that is true:** a simulated, general finite-horizon resource-allocation benchmark with policy-dependent dynamics, real RL / sequence-model / online-optimisation / offline-evaluation / experimentation mechanisms. **Framing that is false:** any real workload, advertiser or traffic data, live delivery, production experiments, or state-of-the-art bidding claims.
+
+### 45.1 Architecture after the extension
+
+```
+domains/allocation/
+  env.py         AllocationEnvConfig, BudgetedAllocationEnv (reset/transition/step/observation), VectorEnv, episode_seed
+  policies.py    Policy interface; ThresholdPacingPolicy; DualPacingPolicy; MLPActorCritic; GRUActorCritic; NeuralPolicy; HistoryBuffer; EpsilonMixPolicy
+  ppo.py         AllocationPPOAlgorithm (PostTrainingAlgorithm) — collect/loss on top of the shared Trainer; build_allocation_ppo; load_allocation_policy
+  rollout.py     LoggedStep / Episode schema v1, write/read_episodes (validated), run_episodes (lockstep batches), episode_metrics, aggregate_metrics
+  ope.py         cumulative_weights, ips/snips/pdis/dr estimators, effective_sample_size, bootstrap_ci, fit_q_ridge, evaluate_policy, evaluate_target_policy
+  oracle.py      hindsight_upper_bound (fractional knapsack, KKT + bisection), oracle_for_seed, oracle_values
+  experiment.py  ABConfig, assign_arms (stable_bucket), run_ab_experiment (bootstrap CI, permutation test, guardrails, gate_metrics), shadow_evaluate
+  benchmark.py   BenchmarkConfig, run_benchmark (train → evaluate → OPE → A/B → shadow → results.json + summary.md)
+```
+Integration points (no duplicates created): `training/factory.py::build_algorithm` dispatches `allocation_ppo` → `build_allocation_ppo`; `core/config.py::KNOWN_ALGORITHMS` lists it; the shared `Trainer`, `CheckpointManager`, metrics sinks and DDP path are reused unchanged; `deployment/feature_flags.py::stable_bucket` provides A/B assignment; `PromotionGate`, `CandidateRegistry`, `rollback` consume `ABResult.gate_metrics()`; new events `ope.evaluated`, `experiment.ab`, `experiment.shadow` in `observability/events.py`; the dashboard shows the `benchmarks/decisioning` record and any `runs/` produced by training.
+
+### 45.2 Exact MDP
+
+| Element | Definition |
+|---|---|
+| Horizon `T` | 48 (benchmark); fixed length; no early termination |
+| Budget `B` | 24.0; hard constraint `x_t = min(m_t ĉ_t, B_t)`; a clipped request is a recorded *violation* |
+| Exogenous opportunity `o_t = (v_t, c_t, q_t, s_t)` | `s_t = sin(2π(t+phase)/T)`, `phase ~ U[0,T)`; `v_t = v̄ e^{σ_v ε − σ_v²/2} (1 + A_v s_t)`; `c_t = c̄ e^{σ_c ε' − σ_c²/2} (1 + A_c s_t)`; `q_t ~ Beta(α,β)`; `v̄ = c̄ = 1`, `σ_v = 0.5`, `σ_c = 0.3`, `A_v = 0.4`, `A_c = −0.2`, `α = β = 2` |
+| Action `a_t` | `{abstain, low, medium, high}` → multiplier `m_t ∈ {0, 0.5, 1.0, 1.5}`; chosen before `o_{t+1}` is drawn |
+| Latent `p_t` | pressure, `p_0 = 0`, **not observed** |
+| Effective cost | `ĉ_t = c_t (1 + κ p_t)`, `κ = 0.6` |
+| Intensity | `u_t = x_t / ĉ_t` |
+| Response | `ρ_t = q_t (1 − e^{−u_t}) max(0, 1 − φ p_t)`, `φ = 0.35`; `y_t ~ Bernoulli(ρ_t)` |
+| Reward / cost | `r_t = y_t v_t`; cost `x_t` |
+| Transitions | `B_{t+1} = B_t − x_t`; `p_{t+1} = δ p_t + η u_t`, `δ = 0.85`, `η = 0.25` |
+| Observation (14-d) | remaining/B, t/T, (T−t)/T, v_t/v̄−1, c_t/c̄−1, q_t, s_t, cum_spend/B − t/T, cum_value/(T v̄), last multiplier/1.5, last reward/v̄, last spend/c̄, mean relative value and cost of the last 4 opportunities |
+| Objective | maximise `Σ_t r_t` s.t. `Σ_t x_t ≤ B`; undiscounted (γ = 1 in PPO) |
+| Stochasticity | opportunity draws and Bernoulli outcomes, both fixed by the episode seed (`episode_seed(base, i)`), so every policy faces identical exogenous streams per seed |
+| Partial observability | pressure is hidden; it must be inferred from realised effective costs/outcomes → POMDP |
+
+### 45.3 Policy-dependent dynamics (endogenous feedback)
+
+`p_{t+1} = δ p_t + η u_t` accumulates the intensities the policy actually affords; `p_t` multiplies later effective costs by `(1 + κ p_t)` and later response rates by `(1 − φ p_t)`. Aggressive allocation therefore both consumes budget and degrades later opportunities. Proof of endogeneity in tests: with identical seed and identical actions from step 6, an aggressive prefix (5 × high) yields strictly higher effective cost and lower response rate than a cautious prefix (5 × abstain) on the identical opportunity, across 30 seeds; `pressure_gain: 0` makes the two prefixes indistinguishable (`tests/unit/test_allocation_env.py`). Realised effect in the benchmark: final pressure 0.25 (heuristic) vs 0.68 (pacer) vs ~0.5 (PPO) shows the policies induce different latent-state distributions.
+
+### 45.4 Uncertainty model
+
+Value, cost and quality are drawn per step from the log-normal / Beta processes above with a seasonal modulation whose phase is random per episode (non-stationarity the policy cannot know in advance); outcomes are Bernoulli. The policy sees only the current opportunity and observable history.
+
+### 45.5 Baselines
+
+* **Static heuristic** — `ThresholdPacingPolicy(threshold 0.6, level medium, slack 0.05)`: allocate when `v_t q_t / c_t ≥ 0.6` and cumulative spend ≤ `B (t/T + 0.05)`.
+* **Online optimizer** — `DualPacingPolicy(α = 0.2, λ₀ = 0.8)`: objective `max Σ_t E[r_t]` s.t. `Σ x_t ≤ B`; per-step Lagrangian `L(m) = v_t q_t (1 − e^{−m}) − λ m c_t`, action `argmax_m L`; dual update `λ ← max(0, λ + α (x_t − B/T))`. Budget pressure enters through λ; adaptation is to observed spend (not to the latent pressure).
+
+### 45.6 RL policies and sequence model
+
+* **Stateless PPO** — `MLPActorCritic`: `14 → 64 → tanh → 64 → tanh → {4 logits, value}`.
+* **Sequence-conditioned PPO** — `GRUActorCritic`: history features `h_j = [obs_j (14), onehot(a_j) (4), r_j/v̄, x_j/c̄, B_j/B]` (21-d) over a window `W = 8`; `HistoryBuffer` keeps a left-padded rolling window with lengths; the forward pass right-aligns and packs valid steps, runs a 1-layer GRU (hidden 64), masks empty histories, concatenates the final GRU state with `tanh(Linear(obs))`, then `Linear(128 → 64) → tanh → {logits, value}`. Test: identical current observation with different histories yields different action distributions; the window truncates to the most recent 8 steps.
+* **PPO integration** — `AllocationPPOAlgorithm.collect` runs `episodes_per_rollout = 32` lockstep episodes (`VectorEnv`), storing obs, history tensors, actions, old log-probs, rewards and values; GAE (`compute_gae`, γ = 1, λ = 0.95) per episode; advantages normalised; the same rollout is returned for `ppo_epochs = 4` consecutive trainer steps with a fresh minibatch permutation (`gradient_accumulation_steps = 4` minibatches); `loss` = `ppo_clipped_objective` (ε 0.2) + 0.5 value MSE − 0.01 entropy; metrics `reward_mean/std`, `clipped_per_episode`, `utilization`, `policy_loss`, `value_loss`, `entropy`, `approx_kl`, `clip_fraction`. Optimizer AdamW lr 3e-3 → 3e-4 linear decay, grad clip 0.5; 1,200 trainer steps = 300 rollouts = 9,600 episodes per seed. Checkpoints via `Trainer` (`model_spec.family = allocation_policy`); `load_allocation_policy` rebuilds the policy from a checkpoint.
+
+### 45.7 Logged trajectories
+
+`LoggedStep` fields: `episode_id, seed, t, obs[14], history_summary{cum_spend_frac, elapsed_frac}, action, propensity, action_probs[4], reward, cost, next_obs[14], cum_spend, cum_reward, remaining_budget, terminal, clipped, pressure`. Validation on read: `0 < propensity ≤ 1`, `propensity == action_probs[action]`, `action_probs` a finite distribution, finite reward/non-negative cost, contiguous timesteps, terminated episodes, schema version. Behaviour policy for the benchmark log: `EpsilonMixPolicy(best stateless PPO, ε = 0.2)` → every action has propensity ≥ 0.05.
+
+### 45.8 Offline policy evaluation
+
+Estimators as in `ope.py` docstring (IPS, SNIPS, PDIS, per-decision DR with ridge Q̂; clipped variants at `max_weight = 20`); diagnostics ESS, ESS fraction, max/mean weight, unsupported fraction (target mass on behaviour-impossible actions → `OPEError`), zero-target fraction, clipped fraction, overlap mean/min; warnings for ESS < 10, ESS/n < 0.05, max weight > 100, zero-target > 50 %; refusals for zero/invalid propensities, invalid target distributions, non-finite weights. Bootstrap: 500 percentile resamples over episodes (SNIPS bootstraps the ratio). Hand-computed verification: two 2-step episodes with uniform behaviour and a 0.8/0.2 target give IPS 6.08, SNIPS 3.8, PDIS 5.96, DR (Q̂ ≡ 1) 5.36, ESS 1.47 (`test_core_formulas_against_hand_values`), and `evaluate_policy` reproduces them end to end.
+
+**Measured OPE accuracy** (300 logged episodes, behaviour `ppo_mlp_eps0.2`, truth = simulator on the same seeds):
+
+| Target | Truth | IPS | SNIPS | PDIS | DR | DR clipped | ESS | warnings |
+|---|---|---|---|---|---|---|---|---|
+| ppo_mlp_best | 7.566 | 5.235 (err 2.33) | 8.536 (err 0.97) | 5.958 (err 1.61) | 7.671 (err 0.11) | 7.474 (err 0.09) | 4.4 | 2 |
+| ppo_gru_best | 7.742 | 0.257 (err 7.48) | 5.535 (err 2.21) | 2.374 (err 5.37) | 6.817 (err 0.92) | 6.928 (err 0.81) | 5.2 | 2 |
+| dual_pacing | 7.697 | 0.000 (err 7.70) | — | 1.784 (err 5.91) | 6.917 (err 0.78) | 6.742 (err 0.96) | 0.0 | 4 |
+| threshold_pacing | 7.138 | 0.000 (err 7.14) | — | 0.603 (err 6.53) | 6.677 (err 0.46) | 6.747 (err 0.39) | 0.0 | 3 |
+| behaviour_itself | 6.927 | 6.802 (err 0.12) | 6.802 (err 0.12) | 6.802 (err 0.12) | 6.828 (err 0.10) | 6.828 (err 0.10) | 300.0 | 0 |
+
+DR is the only estimator that stays close to truth for every target; trajectory IPS collapses (ESS ≈ 0–5 of 300) because 48-step ratio products vanish or explode; PDIS is biased low for targets that abstain where the behaviour spends. The self-evaluation row (`behaviour_itself`) recovers the logged value with ESS = 300.
+
+### 45.9 Oracle and regret
+
+`hindsight_upper_bound` solves `max Σ v_t q_t (1 − e^{−u_t})` s.t. `Σ u_t c_t ≤ B`, `0 ≤ u_t ≤ 1.5` with the KKT solution `u_t = clip(ln(v_t q_t/(λ c_t)), 0, 1.5)` and λ by bisection; it knows the future, ignores pressure (which only hurts) and allocates fractionally, so it upper-bounds every realisable policy's expected return (tested: the expected value of every baseline plan ≤ oracle). Benchmark oracle mean 13.219; regrets in the table below. It is labelled HINDSIGHT ORACLE / UPPER BOUND and is not a deployable policy.
+
+### 45.10 Measured benchmark (`benchmarks/decisioning/budgeted_allocation`, `forgeline allocation benchmark --config configs/allocation/benchmark.yaml`)
+
+Environment: horizon 48, budget 24; 300 held-out episodes (seed family 20000) shared by every policy; PPO trained on 5 seeds (0–4), evaluated with its stochastic action distribution.
+
+| Policy | Value (mean ± seed std) | Utilisation | Value/budget | Pacing error | Early exhaustion | Unused budget | Violations | Regret vs oracle | Δ vs dual pacer (dual − policy) |
+|---|---|---|---|---|---|---|---|---|---|
+| threshold_pacing | 7.292 ± 0.000 | 0.700 | 0.304 | 0.178 | 0.000 | 0.300 | 0.02 | 5.927 | +0.415 |
+| dual_pacing | 7.707 ± 0.000 | 0.920 | 0.321 | 0.082 | 0.000 | 0.080 | 0.03 | 5.512 | +0.000 |
+| ppo_mlp | 7.402 ± 0.098 | 0.873 | 0.308 | 0.153 | 0.045 | 0.127 | 0.60 | 5.818 | +0.306 |
+| ppo_gru | 7.595 ± 0.115 | 0.948 | 0.316 | 0.091 | 0.198 | 0.052 | 1.82 | 5.624 | +0.112 |
+
+Per-seed PPO values (same held-out episodes):
+
+| Seed | stateless PPO | GRU PPO | GRU − stateless |
+|---|---|---|---|
+| 0 | 7.441 | 7.662 | +0.221 |
+| 1 | 7.542 | 7.718 | +0.177 |
+| 2 | 7.409 | 7.564 | +0.155 |
+| 3 | 7.309 | 7.616 | +0.307 |
+| 4 | 7.308 | 7.416 | +0.108 |
+
+Interpretation: history helps — the GRU policy beats the stateless policy on every seed (+0.12 to +0.26, mean +0.19, ≈ 1.7 seed-std) and paces better (pacing error 0.09 vs 0.15), but it exhausts the budget early more often (0.20 vs 0.05) and clips more (1.8 vs 0.6 attempts/episode). The online dual pacer remains the best policy at this training budget (7.71), the static heuristic the worst (7.29, 70 % utilisation). All four sit far below the hindsight bound (13.2), which is loose because it also ignores pressure and discreteness. **Negative result preserved:** RL did not beat the online optimizer; no tuning was performed to change that.
+
+**Simulated A/B** (`dual_pacing` incumbent vs best GRU PPO challenger, 400 episodes hashed into arms 197/203): Δvalue +0.567, 95 % bootstrap CI [-0.041, +1.157], permutation p = 0.084; guardrail failures: ['primary metric CI lower bound -0.0405 < -0.0', 'violations increased by 1.029 > 0.5']; decision **reject**. The same metrics fail `configs/allocation/promotion_gate.yaml` (`ab/value_delta_ci_low ≥ 0`, `ab/violations_delta ≤ 0.5`).
+
+**Shadow evaluation** (100 episodes): divergence rate 0.398 (by horizon third [0.381, 0.378, 0.435]); incumbent value 7.656, candidate replay value 8.066.
+
+**Throughput (laptop CPU):** 50886 env steps/s in evaluation; 297 OPE trajectory-evaluations/s; 518 A/B episodes/s; PPO training 8 s (MLP) / 26 s (GRU) per seed for 9,600 episodes; whole benchmark 179 s; 96,000 training episodes simulated in total.
+
+### 45.11 Pacing / budget metrics
+
+Per episode (`episode_metrics`): value, spend, utilisation, value per budget, pacing error `mean_t |cum_spend_t/B − (t+1)/T|`, early exhaustion (budget gone before 90 % of the horizon), unused-budget fraction, violations (clipped requests), reward variance, value and spend by horizon third, action distribution, final pressure; `aggregate_metrics` adds means, standard deviations and a 95 % half-width for value.
+
+### 45.12 Lifecycle integration
+
+`train candidate → held-out simulator evaluation (Trainer.evaluate on a fixed seed family) → OPE from a logged behaviour set → simulated A/B → ABResult.gate_metrics() → CandidateRegistry.register(metrics) → PromotionGate (configs/allocation/promotion_gate.yaml) → promote or reject → rollback`. Demonstrated by `examples/06_allocation_lifecycle.py` and `tests/integration/test_allocation_pipeline.py::test_lifecycle_with_ab_gate` (a regressing challenger is rejected, a better one is promoted and rolled back). Shadow decisions reuse the same policy interface without any second lifecycle.
+
+### 45.13 Tests (30 new; all CPU)
+
+`tests/unit/test_allocation_env.py` (10): transition equations, budget conservation/clipping, termination, invalid action/config, seeded reproducibility, endogenous feedback (and its absence with `pressure_gain: 0`), vector env equivalence, oracle upper bound/budget, pacing metrics. `tests/unit/test_allocation_ope.py` (7): hand-computed IPS/SNIPS/PDIS/DR/ESS/clipping/discount, end-to-end match, bootstrap behaviour, support and validity errors, weak-support warnings, weight explosion refusal, logged schema round trip and validation. `tests/integration/test_allocation_pipeline.py` (13): heuristic pacing and dual-price adaptation, pacer budget adaptation, GRU history consumption and window truncation, ε-mix support, PPO training + checkpoint reload for MLP and GRU, PPO improvement over initialisation, OPE recovering simulator value for a supported target and GRU replay, deterministic/balanced assignment, permutation test and A/B decisions (rejection, promotion, small-sample warning, invalid guardrail), shadow divergence, lifecycle with gate and rollback, CLI end to end (benchmark, ope, ab with gate metrics and events, shadow, train).
+
+### 45.14 Bugs found while building
+
+* GRU history windows are stored left-padded (most recent last); `pack_padded_sequence` expects valid steps first — fixed by gathering a per-row shift before packing (a wrong fix would have fed padding into the recurrent state).
+* OPE "support" was first defined as the target giving zero probability to a logged action; that only zeroes weights (an ESS problem, now `zero_target_fraction`) — the invalid case is target mass on behaviour-impossible actions, which is what `unsupported_fraction` now measures.
+* SNIPS is undefined when every trajectory weight is zero (deterministic targets at horizon 48); it is now reported as unavailable with a warning instead of aborting the report.
+* The first heuristic threshold (1.0) used only 28 % of the budget; the benchmark uses 0.6 (documented; not tuned against PPO).
+* A stray wall-clock measurement suggested training took minutes; profiling showed 20 trainer steps in 0.36 s — the pipe, not the code.
+
+### 45.15 Commands
+
+```
+forgeline allocation benchmark --config configs/allocation/benchmark.yaml
+forgeline allocation benchmark --config configs/allocation/benchmark_tiny_cpu.yaml
+forgeline train configs/allocation/ppo_mlp.yaml | ppo_gru.yaml | ppo_tiny_cpu.yaml
+forgeline allocation ope --log runs/allocation-benchmark/logged_trajectories.jsonl --target <checkpoint>|dual|threshold [--max-weight 20]
+forgeline allocation ab --incumbent dual --challenger <checkpoint> --episodes 400 --gate-metrics gate.json [--metrics local]
+forgeline allocation shadow --incumbent dual --candidate <checkpoint> --episodes 100
+forgeline registry register … --metrics "$(cat gate.json)"; forgeline registry promote --id <id> --to champion --gate configs/allocation/promotion_gate.yaml
+python examples/06_allocation_lifecycle.py
+```
+
+### 45.16 Coexistence with the generative stack
+
+The decisioning subsystem shares the manifest/`RunContext`/`Trainer`/checkpoint/metrics/registry/gate machinery with the language-model post-training stack; `AllocationPPOAlgorithm` is a sibling of `PPOAlgorithm` (LM) under the same `PostTrainingAlgorithm` contract, and the A/B harness consumes the same `stable_bucket` routing hash as serving. No new generative-model experiment was added for this extension.
+
+### 45.17 Truth boundaries (this subsystem)
+
+Safe: "simulated constrained sequential-decision environment", "general resource-allocation benchmark", "controlled offline A/B experiment", "policy-dependent simulator", "implemented and verified RL / sequence / online-optimisation / OPE / experimentation mechanisms", "RL policies did not beat the online pacer at this training budget". Unsafe: advertiser workloads, real bidding traffic, real campaign budgets, live delivery, production A/B tests, SOTA bidding, production impact, any claim that the sequence model beats the online optimizer.

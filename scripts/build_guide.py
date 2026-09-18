@@ -17,7 +17,7 @@ SECTIONS = [
     ("Distributed execution", "distributed.md"), ("Orchestration (optional Ray backend)", "orchestration.md"), ("Checkpointing and recovery", "checkpointing.md"),
     ("Evaluation", "evaluation.md"), ("Quantization and export", "quantization.md"), ("Inference", "inference.md"),
     ("Serving", "serving.md"), ("Deployment: registry, gates, rollout, rollback", "deployment.md"),
-    ("Observability", "observability.md"), ("Dashboard", "dashboard.md"), ("Synthesis domain", "synthesis_domain.md"), ("Testing", "testing.md"),
+    ("Observability", "observability.md"), ("Dashboard", "dashboard.md"), ("Synthesis domain", "synthesis_domain.md"), ("Sequential decisioning: budgeted allocation", "decisioning.md"), ("Testing", "testing.md"),
 ]
 
 API = """
@@ -45,6 +45,7 @@ API = """
 | `from forgeline.dashboard import DashboardSources, snapshot, discover_runs, run_detail, inspect_checkpoint` | optional dashboard data layer |
 | `from forgeline.evaluation.inspection import attention_patterns, activation_flow, weight_statistics, layer_summary` | model inspection |
 | `from forgeline.domains.synthesis import SynthesisRuleReward, TabularPPOTrainer, build_preference_pairs` | synthesis domain |
+| `from forgeline.domains.allocation import BudgetedAllocationEnv, AllocationEnvConfig, DualPacingPolicy, ThresholdPacingPolicy, NeuralPolicy, AllocationPPOAlgorithm, load_allocation_policy, run_episodes, evaluate_target_policy, run_ab_experiment, shadow_evaluate, oracle_values` | sequential decisioning |
 
 ### Minimal Python training loop
 

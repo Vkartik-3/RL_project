@@ -1,0 +1,11 @@
+# Smoke benchmark (seconds): one seed, few steps. Numbers are not meaningful; use benchmark.yaml for results.
+env: {horizon: 12, budget: 6.0}
+training_seeds: [0]
+eval_episodes: 20
+trainer_steps: 8
+episodes_per_rollout: 4
+ope_log_episodes: 20
+ab_episodes: 40
+shadow_episodes: 8
+output_dir: runs/allocation-benchmark-tiny
+metrics: none

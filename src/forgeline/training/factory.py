@@ -234,6 +234,11 @@ def build_algorithm(manifest: ExperimentManifest, ctx: RunContext) -> PostTraini
             built = DAPOAlgorithm(policy, prompts, reward, _kw(p, DAPOConfig), rollout, tasks=tasks)
         return _attach_orchestration(built, manifest, reward_cfg)
 
+    if alg == "allocation_ppo":
+        from forgeline.domains.allocation.ppo import build_allocation_ppo
+
+        return build_allocation_ppo(p, ctx.device)
+
     if alg == "rlvr":
         from forgeline.training.dapo import DAPOConfig
         from forgeline.training.grpo import GRPOConfig

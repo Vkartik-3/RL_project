@@ -1,0 +1,8 @@
+# Promotion gate over simulated A/B metrics (forgeline allocation ab --gate-metrics) for an allocation challenger.
+rules:
+  - {metric: ab/value_delta_ci_low, min: 0.0, description: "95% CI of the value difference must exclude a regression"}
+  - {metric: ab/violations_delta, max: 0.5, description: "no material increase in clipped-budget attempts"}
+  - {metric: ab/early_exhaustion_delta, max: 0.1, description: "no material increase in early budget exhaustion"}
+  - {metric: ab/utilization_challenger, min: 0.5, max: 1.0}
+  - {metric: ab/guardrail_failures, max: 0.0}
+  - {metric: ab/n_challenger, min: 30}

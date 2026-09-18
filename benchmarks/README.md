@@ -34,6 +34,7 @@ Every record also carries `ledger_status`, one status per reported number:
 | Hill climb | rlvr/hill_climb_gsm8k | accuracy 0.125 → 0.0 | raw_log | carry forward with note (negative result) |
 | Tabular PPO | post_training/tabular_ppo_synthesis | record statistics; leave-one-molecule-out record means | raw_log | carry forward with note |
 | AI feedback data | post_training/ai_feedback_data | 60 pairwise DPO pairs; 10 constitutional revisions | raw_log | carry forward (reproduced) |
+| Sequential decisioning | decisioning/budgeted_allocation | dual pacer 7.71, sequence PPO 7.60 ± 0.12, stateless PPO 7.40 ± 0.10, heuristic 7.29 (oracle 13.22); DR OPE within 0.1–0.9 of truth; A/B rejected | raw_log | carry forward |
 | — | post_training/runs_without_retained_logs | GRPO 0.823, RLAIF 0.814, STaR 0.791, SFT 0.412 | documented_without_raw_log | needs evidence recovery |
 
 ## Normalisation differences

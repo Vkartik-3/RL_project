@@ -1,0 +1,26 @@
+# Stateless PPO (MLP actor-critic on the current observation) for the budgeted allocation environment. CPU smoke run, seconds.
+name: allocation-ppo-tiny
+algorithm: allocation_ppo
+trainer:
+  max_steps: 8
+  batch_size: 1
+  gradient_accumulation_steps: 4    # minibatches per epoch
+  eval_every: 4
+  log_every: 20
+  device: cpu
+  optimizer: {learning_rate: 3.0e-3, weight_decay: 0.0, beta2: 0.999, grad_clip: 0.5, decay_only_matrices: false}
+  schedule: {name: linear_decay, warmup_steps: 0, decay_steps: 8, min_lr: 3.0e-4}
+  checkpoint: {directory: checkpoints, save_every: 0}
+algorithm_params:
+  env: {horizon: 12, budget: 6.0}
+  policy: {kind: mlp, hidden: 64}
+  episodes_per_rollout: 4
+  ppo_epochs: 4
+  clip_ratio: 0.2
+  value_coef: 0.5
+  entropy_coef: 0.01
+  gamma: 1.0
+  gae_lambda: 0.95
+  eval_episodes: 8
+  seed: 0
+output_dir: runs/allocation-ppo-tiny

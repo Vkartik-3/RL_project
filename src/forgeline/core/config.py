@@ -353,7 +353,7 @@ class ExperimentManifest:
 
     KNOWN_ALGORITHMS = (
         "pretrain", "sft", "distill", "reward_model", "dpo", "ppo", "grpo", "dapo",
-        "rlvr", "rlaif", "constitutional", "star", "hill_climb", "tabular_ppo",
+        "rlvr", "rlaif", "constitutional", "star", "hill_climb", "tabular_ppo", "allocation_ppo",
     )
 
     def validate(self) -> None:

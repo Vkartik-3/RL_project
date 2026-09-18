@@ -1,0 +1,1 @@
+Apple Silicon laptop CPU (macOS arm64), Python 3.12.13, torch 2.14.0, 4 threads. No GPU.

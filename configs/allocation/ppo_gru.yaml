@@ -1,0 +1,26 @@
+# Sequence-conditioned PPO (GRU over the last 8 steps of observation, action, reward, spend, remaining budget) for the budgeted allocation environment. CPU, ~5 min.
+name: allocation-ppo-gru
+algorithm: allocation_ppo
+trainer:
+  max_steps: 600                    # 150 rollouts × 4 PPO epochs
+  batch_size: 1
+  gradient_accumulation_steps: 4    # minibatches per epoch
+  eval_every: 100
+  log_every: 20
+  device: cpu
+  optimizer: {learning_rate: 3.0e-3, weight_decay: 0.0, beta2: 0.999, grad_clip: 0.5, decay_only_matrices: false}
+  schedule: {name: linear_decay, warmup_steps: 0, decay_steps: 600, min_lr: 3.0e-4}
+  checkpoint: {directory: checkpoints, save_every: 0}
+algorithm_params:
+  env: {horizon: 48, budget: 24.0}
+  policy: {kind: gru, hidden: 64, window: 8}
+  episodes_per_rollout: 32
+  ppo_epochs: 4
+  clip_ratio: 0.2
+  value_coef: 0.5
+  entropy_coef: 0.01
+  gamma: 1.0
+  gae_lambda: 0.95
+  eval_episodes: 128
+  seed: 0
+output_dir: runs/allocation-ppo-gru

@@ -42,6 +42,7 @@ Contracts: `PolicyModel` (native transformer and HuggingFace+PEFT implementation
 | Observability | `observability` | structured logs, JSONL/no-op/W&B/TensorBoard sinks, events, spans |
 | Orchestration (optional) | `orchestration` | Ray rollout, reward/verifier, tool and evaluation worker pools; on-policy weight sync; placement groups; worker replacement with bounded retries |
 | Dashboard (optional) | `dashboard` | read-only local UI and JSON export over runs, checkpoints, evaluations, registry, benchmark evidence and model inspection |
+| Sequential decisioning | `domains.allocation` | budgeted allocation POMDP with policy-dependent pressure, heuristic/primal-dual/PPO/GRU policies, logged trajectories, OPE, oracle, A/B, shadow |
 | Synthesis domain | `domains.synthesis` | rule reward, constraints, prompt codec, features, preference/SFT construction, simulators, tabular actor-critic PPO |
 
 ## 5. Supported algorithms
@@ -54,6 +55,7 @@ Contracts: `PolicyModel` (native transformer and HuggingFace+PEFT implementation
 | Verifiable rewards | RLVR builder (math, exact match, tagged answer, code execution, format verifiers; correctness + format weighting); process rewards; critic-augmented rewards |
 | Self-improvement / AI feedback | self-judge candidate rounds → reference-free DPO; pairwise judge preference generation; constitutional critique → revise (SFT + DPO data); STaR; rejection-sampling hill climbing with agent GRPO |
 | Domain baseline | tabular actor-critic PPO on synthesis state vectors |
+| Sequential decisioning | stateless and GRU sequence-conditioned PPO (`allocation_ppo`), threshold heuristic, online primal-dual pacer; OPE (IPS/SNIPS/PDIS/DR); simulated A/B; shadow |
 
 ## 6. Supported distributed strategies
 
@@ -137,6 +139,7 @@ fp16 training with gradient scaling; bf16 autocast at scale; FSDP sharding; Deep
 | rlvr/hill_climb_gsm8k | raw log | accuracy 0.125 → 0.0 |
 | post_training/tabular_ppo_synthesis | raw log | training reward 0.8577; leave-one-molecule-out table |
 | post_training/ai_feedback_data | raw log | 60 pairwise DPO pairs; 10 constitutional SFT/DPO records |
+| decisioning/budgeted_allocation | raw log | dual pacer 7.71, sequence PPO 7.60 ± 0.12, stateless PPO 7.40 ± 0.10, heuristic 7.29; oracle 13.22; A/B rejected; DR OPE within 0.1–0.9 of truth (CPU, 3 min) |
 | post_training/runs_without_retained_logs | not published | GRPO 0.823, RLAIF 0.814, STaR 0.791, SFT 0.412 — needs evidence recovery |
 | distributed, quantization, inference (throughput), serving | none | no measurements recorded |
 
